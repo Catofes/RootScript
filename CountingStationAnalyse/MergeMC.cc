@@ -45,7 +45,7 @@ void MergeMC::merge()
 
 int main(int argc, char *argv[])
 {
-    if (argc < 3)
+    if (argc != 3)
         throw std::runtime_error("Error Input. Use MergeMC input_file output_file.");
     cout << "Input File:" << argv[1] << endl;
     cout << "Output File:" << argv[2] << endl;
