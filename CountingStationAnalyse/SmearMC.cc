@@ -27,7 +27,8 @@ void SmearMC::smear()
     TH1F *hparameter = new TH1F("hparameter", "hparameter", 12, 0.0, 12.0);
     int entries_num = _input_chain->GetEntries();
     cout << "Events Number:" << entries_num;
-
+    if (entries_num == 0)
+        throw std::runtime_error("Zero Events");
     Float_t sigma_e;
     TRandom3 r;
     for (int i = 0; i < entries_num; i++) {

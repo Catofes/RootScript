@@ -26,7 +26,8 @@ void MergeMC::merge()
     TH1F *hparameter = new TH1F("hparameter", "hparameter", 12, 0.0, 12.0);
     int entries_num = _input_chain->GetEntries();
     cout << "Events Number:" << entries_num;
-
+    if (entries_num == 0)
+        throw std::runtime_error("Zero Events");
     for (int i = 0; i < entries_num; i++) {
         _input_chain->GetEntry(i);
         _cha_energy = _total_energy;
