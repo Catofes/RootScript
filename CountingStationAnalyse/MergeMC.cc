@@ -14,7 +14,7 @@ MergeMC::MergeMC(std::string input_path, std::string output_path)
     _output_file = new TFile(output_path.c_str(), "RECREATE");
     _output_tree = new TTree("t1", "Energy results");
     _input_chain->SetBranchAddress("totalEnergy", &_total_energy);
-    _output_tree->Branch("Cha_Energy", &_cha_energy, "Cha_Energy");
+    _output_tree->Branch("Cha_Energy", &_cha_energy, "Cha_Energy/D");
 }
 
 void MergeMC::merge()
@@ -25,7 +25,7 @@ void MergeMC::merge()
     energy->SetYTitle("Entries / 0.5keV");
     TH1F *hparameter = new TH1F("hparameter", "hparameter", 12, 0.0, 12.0);
     int entries_num = _input_chain->GetEntries();
-    cout << "Events Number:" << entries_num;
+    cout << "Events Number:" << entries_num << endl;
     if (entries_num == 0)
         throw std::runtime_error("Zero Events");
     for (int i = 0; i < entries_num; i++) {
