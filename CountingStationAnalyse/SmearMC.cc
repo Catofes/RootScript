@@ -20,6 +20,7 @@ SmearMC::SmearMC(std::string input_path, std::string output_path)
 
 void SmearMC::smear()
 {
+    _output_file->cd();
     TH1F *energy = new TH1F("he", "he", 6000, 0.0, 3000.0);
     energy->SetXTitle("E [keV]");
     energy->SetYTitle("Entries / 0.5keV");
@@ -38,7 +39,6 @@ void SmearMC::smear()
     }
     hparameter->SetBinContent(1, _simulate_num / 1000000);//runtime
     hparameter->SetBinContent(2, _simulate_num / 1000000);//livetime
-    _output_file->cd();
     energy->Write();
     hparameter->Write();
     _output_tree->Write();
@@ -49,5 +49,7 @@ int main(int argc, char *argv[])
 {
     if (argc < 3)
         throw std::runtime_error("Error Input. Use MergeMC input_file output_file.");
+    cout << "Input File:" << argv[1] << endl;
+    cout << "Output File:" << argv[2] << endl;
     SmearMC(argv[1], argv[2]).smear();
 }
