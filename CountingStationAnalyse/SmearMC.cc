@@ -3,6 +3,7 @@
 //
 
 #include <TH1.h>
+#include <TRandom3.h>
 #include "SmearMC.hh"
 
 using namespace std;
@@ -17,7 +18,7 @@ SmearMC::SmearMC(std::string input_path, std::string output_path)
     _output_tree->Branch("Cha_Energy", &_cha_energy, "Cha_Energy/F");
 }
 
-void MergeMC::merge()
+void SmearMC::smear()
 {
     TH1F *energy = new TH1F("he", "he", 6000, 0.0, 3000.0);
     energy->SetXTitle("E [keV]");
@@ -48,5 +49,5 @@ int main(int argc, char *argv[])
 {
     if (argc < 2)
         throw std::runtime_error("Error Input. Use MergeMC input_file output_file.");
-    MergeMC(argv[0], argv[1]).merge();
+    SmearMC(argv[0], argv[1]).smear();
 }
