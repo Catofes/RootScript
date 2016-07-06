@@ -15,7 +15,7 @@ SmearMC::SmearMC(std::string input_path, std::string output_path)
     _output_file = new TFile(output_path.c_str(), "RECREATE");
     _output_tree = new TTree("t1", "Energy results");
     _input_chain->SetBranchAddress("Cha_Energy", &_cha_energy);
-    _output_tree->Branch("Cha_Energy", &_cha_energy, "Cha_Energy/F");
+    _output_tree->Branch("Cha_Energy", &_cha_energy, "Cha_Energy");
 }
 
 void SmearMC::smear()
