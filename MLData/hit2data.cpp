@@ -46,6 +46,6 @@ int main(int argc, char *argv[])
     if (argc != 4) {
         throw runtime_error("Use Hit2Data input_file, output_file, type.");
     }
-    Hit2Data hit2data(argv[1], argv[2], int(argv[3]));
+    Hit2Data hit2data(argv[1], argv[2], atoi(argv[3]));
     hit2data.Convert();
 }
