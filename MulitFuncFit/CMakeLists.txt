@@ -1,0 +1,1 @@
+add_executable(MultiFuncFit Fit.cpp Function.cpp)
