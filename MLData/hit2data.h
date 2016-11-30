@@ -10,6 +10,7 @@
 #include <TTree.h>
 #include <string.h>
 #include <TFile.h>
+#include <vector>
 
 using namespace std;
 
@@ -27,8 +28,12 @@ private:
     TFile _output_file;
     TTree _output_tree;
 
-    vector<float> *_x, *_y, *_z, *_e;
+    vector<double> *_x = 0;
+    vector<double> *_y = 0;
+    vector<double> *_z = 0;
+    vector<double> *_e = 0;
 
+    double _total_energy;
     int _type;
 };
 
