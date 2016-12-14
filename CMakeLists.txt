@@ -12,8 +12,11 @@ execute_process(
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_FLAGS} -std=c++11 -march=native")
 
+include_directories(ArgParser)
+
 add_subdirectory(LatexAnalyse)
 add_subdirectory(CountingStationAnalyse)
 add_subdirectory(MLData)
 #add_subdirectory(MulitFuncFit)
 add_subdirectory(LengthDistribution)
+add_subdirectory(TimeSplit)

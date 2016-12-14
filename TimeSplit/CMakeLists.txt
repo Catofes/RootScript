@@ -1,0 +1,1 @@
+add_executable(Split split.cc)
