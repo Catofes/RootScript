@@ -1,0 +1,1 @@
+add_library(SHARED G4DataConvert G4DataConvert.cpp)

@@ -50,3 +50,21 @@ int main(int argc, char *argv[])
     cout << "Output File:" << argv[2] << endl;
     MergeMC(argv[1], argv[2]).merge();
 }
+
+struct HitsInfo
+{
+    vector<tuple<double, double, double, double>> hits_info; // (x,y,z,e) hit info
+    double trigger_threshold;
+    double work_function;
+//Other Info
+//    ...
+};
+struct AnalyseResult
+{
+    double total_energy;
+    double triggered_energy;
+//Other Results
+//   ...
+};
+
+AnalyseResult analyse_a_event(const HitsInfo &input_data);
