@@ -1,6 +1,9 @@
 //
-// Created by herbertqiao on 1/10/17.
+// Created by herbertqiao on 1/13/17.
 //
+
+#ifndef ROOTSCRIPT_LOAD_FILE_H
+#define ROOTSCRIPT_LOAD_FILE_H
 
 #include <TChain.h>
 #include <iostream>
@@ -11,16 +14,19 @@
 
 using namespace std;
 
-class Convert
+class BaseConvert
 {
 public:
-    Convert(const string &input_path);
 
-    void process(int i);
+    BaseConvert(const string &input_path);
 
-    void process_all();
+    virtual void process(int i){};
 
-private:
+    virtual void final(){};
+
+    virtual void process_all();
+
+protected:
     TChain *chain;
     Int_t runId;
     Int_t eventId;
@@ -49,10 +55,9 @@ private:
     vector<double> *primaryY;
     vector<double> *primaryZ;
 
-    TH1F *h;
 };
 
-Convert::Convert(const string &input_path = "*.root")
+BaseConvert::BaseConvert(const string &input_path = "*.root")
 {
     chain = new TChain("mcTree");
     chain->Add(input_path.c_str());
@@ -105,24 +110,9 @@ Convert::Convert(const string &input_path = "*.root")
     chain->SetBranchAddress("primaryX", &primaryX);
     chain->SetBranchAddress("primaryY", &primaryY);
     chain->SetBranchAddress("primaryZ", &primaryZ);
-
-    h = new TH1F("Energy", "Energy", 500, 0, 100);
 }
 
-void Convert::process(int i)
-{
-    chain->GetEntry(i);
-    if ((*primaryType)[0] != "Am241")
-        return;
-    double e = 0;
-    for (int k = 0; k < xd->size(); k++) {
-        if ((*type)[k] == "gamma" || (*type)[k] == "e-")
-            e += (*energy)[k];
-    }
-    h->Fill(e);
-}
-
-void Convert::process_all()
+void BaseConvert::process_all()
 {
     int entries = chain->GetEntries();
     cout << "Total " << entries << " Events." << endl;
@@ -131,17 +121,6 @@ void Convert::process_all()
             cout << i << "/" << entries << endl;
         process(i);
     }
-    h->Draw();
 }
 
-int main(int argc, char **argv)
-{
-    ArgumentParser parser;
-    parser.addArgument("-i", "--input", 1, false);
-    parser.parse(argc, argv);
-    TApplication *myapp = new TApplication("App", &argc, argv);
-    Convert convert(parser.retrieve<string>("input"));
-    cout << "Bind finished" << endl;
-    convert.process_all();
-    myapp->Run();
-}
+#endif //ROOTSCRIPT_LOAD_FILE_H
