@@ -1,0 +1,1 @@
+add_executable(total_energy total_energy.cpp)
