@@ -13,7 +13,7 @@
 
 using namespace std;
 
-//Hit info with x, y, z, e at(mm, mm, mm, eV)
+//Hit info with x, y, z, e at(mm, mm, mm, keV)
 typedef tuple<double, double, double, double> hit;
 
 
