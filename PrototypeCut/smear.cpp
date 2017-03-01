@@ -40,7 +40,10 @@ void SmearTotalEnergy::process(int entry)
 {
     chain->GetEntry(entry);
     _total_energy = totalEnergy;
-    _total_energy = _rand->Gaus(_total_energy, _total_energy * _resolution / 2.355);
+    if (_total_energy > 0)
+        _total_energy = _rand->Gaus(_total_energy, _total_energy * _resolution / 2.355 * sqrt(2457.83 / _total_energy));
+    else
+        _total_energy = 0;
     _tree->Fill();
 }
 
