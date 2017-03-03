@@ -4,6 +4,7 @@ project(RootScript)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 find_package(ROOT)
+include(cmake/MacroRootDict.cmake)
 
 execute_process(
         COMMAND ${ROOT_CONFIG_EXECUTABLE} --libs --cflags

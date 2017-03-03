@@ -1,0 +1,25 @@
+{
+  "pixel": {
+    "width": 2.12132,
+    "rotation45": true
+  },
+  "module": {
+    "width_x": 200,
+    "width_y": 200,
+    "rows": 64,
+    "columns": 64
+  },
+  "plane": {
+    "layout": [
+      3,
+      5,
+      7,
+      7,
+      7,
+      5,
+      3
+    ],
+    "gap_x": 10,
+    "gap_y": 10
+  }
+}

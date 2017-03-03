@@ -1,0 +1,3 @@
+[submodule "BambooKeras/Readout_Struct"]
+	path = BambooKeras/Readout_Struct
+	url = git@pandax.physics.sjtu.edu.cn:qiaohao/Readout_Struct.git
