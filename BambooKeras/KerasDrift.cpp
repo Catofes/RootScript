@@ -78,7 +78,7 @@ ReadoutWave ConvertEvent::convert(const RawHits &input)
         auto t = input.td[i];
         auto e = input.energy[i];
         if (z > 0 != in_top)
-            return ReadoutWave(-);
+            return ReadoutWave();
         double drift_z = z_plane - abs(z);
         if (drift_z < 0)
             continue;
