@@ -27,6 +27,10 @@ void fit(const string &input_file)
     g3->SetLineColor(3);
     h->Fit(g3, "R+");
     cout << "Integral(50,70): " << g3->Integral(50, 70) << endl;
+    TF1 *g4 = new TF1("g2", "gaus", 25, 35);
+    g4->SetLineColor(4);
+    h->Fit(g4, "R+");
+    cout << "Integral(50,70): " << g4->Integral(25, 35) << endl;
 }
 
 int main(int argc, char *argv[])

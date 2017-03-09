@@ -31,6 +31,11 @@ public:
 
     ReadoutWave convert(const RawHits &input);
 
+    int gap_count;
+    int out_pixel_count;
+    int record_count;
+    bool cross_cathode;
+
 private:
     ReadoutPlane plane;
 
@@ -45,8 +50,6 @@ private:
     double trigger_threshold;
 
     int get_electron_numbers(double energy);
-
-    double get_total_energy(const ReadoutWave &input);
 
     tuple<int, int, int> get_trigger_offset(vector<ElectronInfo> &electron_info);
 
@@ -66,6 +69,11 @@ ConvertEvent::ConvertEvent(const string &json_file)
 
 ReadoutWave ConvertEvent::convert(const RawHits &input)
 {
+    gap_count = 0;
+    out_pixel_count = 0;
+    record_count = 0;
+    cross_cathode = false;
+
     if (input.xd.size() <= 0)
         return ReadoutWave();
     bool in_top = input.zd[0] > 0;
@@ -77,8 +85,10 @@ ReadoutWave ConvertEvent::convert(const RawHits &input)
         auto z = input.zd[i];
         auto t = input.td[i];
         auto e = input.energy[i];
-        if (z > 0 != in_top)
+        if (z > 0 != in_top) {
+            cross_cathode = true;
             return ReadoutWave();
+        }
         double drift_z = z_plane - abs(z);
         if (drift_z < 0)
             continue;
@@ -89,12 +99,19 @@ ReadoutWave ConvertEvent::convert(const RawHits &input)
         for (auto j = 0; j < electron_numbers; j++) {
             double r_diffusion = random.Gaus(0, r_diffusion_sigma);
             double z_diffusion = random.Gaus(0, z_diffusion_sigma);
-            double xx = x + r_diffusion * TMath::Sin(random.Gaus(0, 2 * TMath::Pi()));
-            double yy = y + r_diffusion * TMath::Sin(random.Gaus(0, 2 * TMath::Pi()));
+            double theta = random.Rndm() * 2 * TMath::Pi();
+            double xx = x + r_diffusion * TMath::Sin(theta);
+            double yy = y + r_diffusion * TMath::Cos(theta);
             double tt = t * 1e6 + drift_time + z_diffusion / drift_velocity;
             int channel_id = plane.GetChannel(xx, yy);
-            if (channel_id >= 0)
+            //int channel_id = 1;
+            if (channel_id >= 0) {
                 electron_info.push_back(make_tuple(channel_id, tt));
+                record_count++;
+            } else if (channel_id == -1)
+                out_pixel_count++;
+            else if (channel_id == -2)
+                gap_count++;
         }
     }
     sort(electron_info.begin(), electron_info.end(),
@@ -105,7 +122,6 @@ ReadoutWave ConvertEvent::convert(const RawHits &input)
         return ReadoutWave();
     }
     ReadoutWave result;
-    int total_electron_count = 0;
     result.trigger_offset = get<1>(electron_info[get<1>(trigger_info)]);
     for (int i = get<0>(trigger_info); i < get<2>(trigger_info); i++) {
         int channel_id = get<0>(electron_info[i]);
@@ -118,12 +134,11 @@ ReadoutWave ConvertEvent::convert(const RawHits &input)
         } else {
             result.detectors[channel_id][t]++;
         }
-        total_electron_count++;
     }
     result.begin = get<0>(trigger_info);
     result.trigger = get<1>(trigger_info);
     result.end = get<2>(trigger_info);
-    result.total_energy = total_electron_count * work_function;
+    result.total_energy = (get<2>(trigger_info) - get<0>(trigger_info)) * work_function;
     return result;
 }
 
@@ -178,6 +193,15 @@ private:
     ReadoutWave *_readout_wave;
     double _trigger_Energy;
 
+    bool _triggered;
+    bool _cross_cathode;
+    int _gap_count;
+    int _out_pixel_count;
+    int _record_count;
+
+    double _delta_x;
+    double _delta_y;
+
 };
 
 Raw2Electron::Raw2Electron(const string &input_path, const string &json_file, const string &output_path)
@@ -190,29 +214,44 @@ Raw2Electron::Raw2Electron(const string &input_path, const string &json_file, co
     _output_tree->Branch("eventId", &eventId, "eventId/I");
     _output_tree->Branch("totalEnergy", &totalEnergy, "totalEnergy/D");
     _output_tree->Branch("triggerEnergy", &_trigger_Energy, "triggerEnergy/D");
-    _output_tree->Branch("readoutWave", _readout_wave);
+    _output_tree->Branch("readoutWave", &_readout_wave);
+    _output_tree->Branch("triggered", &_triggered);
+    _output_tree->Branch("gapCount", &_gap_count);
+    _output_tree->Branch("outPixelCount", &_out_pixel_count);
+    _output_tree->Branch("recordCount", &_record_count);
+    _output_tree->Branch("crossCathode", &_cross_cathode);
+    _output_tree->Branch("deltaX", &_delta_x);
+    _output_tree->Branch("deltaY", &_delta_y);
+
 }
 
 void Raw2Electron::process(int i)
 {
-    chain->GetEntry(i);
-    if (totalEnergy < 1200)
+    if (i > 10000)
         return;
+    if (i % 10 == 0)cout << i << endl;
+    chain->GetEntry(i);
+//    if (totalEnergy < 1200)
+//        return;
     RawHits input;
-    input.xd = *zd;
-    input.yd = *yd;
-    input.zd = *xd;
+    input.xd = *xd;
+    input.yd = *zd;
+    input.zd = *yd;
     input.td = *td;
     input.energy = *energy;
     auto event_result = convert_event.convert(input);
-    if (event_result.total_energy > 0) {
-        _trigger_Energy = event_result.total_energy;
-        _readout_wave = &event_result;
-        _output_tree->Fill();
-    }
-    //cout << i << " " << event_result.trigger_offset << " " << totalEnergy << " " << event_result.total_energy << " "
-    //     << event_result.begin << " " << event_result.trigger << " " << event_result.end << endl;
-
+    //if (event_result.total_energy > 0) {
+    _trigger_Energy = event_result.total_energy;
+    _readout_wave = &event_result;
+    _triggered = event_result.total_energy > 0;
+    _gap_count = convert_event.gap_count;
+    _out_pixel_count = convert_event.out_pixel_count;
+    _record_count = convert_event.record_count;
+    _cross_cathode = convert_event.cross_cathode;
+    _delta_x = *max_element(xd->begin(), xd->end()) - *min_element(xd->begin(), xd->end());
+    _delta_y = *max_element(yd->begin(), yd->end()) - *min_element(yd->begin(), yd->end());
+    _output_tree->Fill();
+    //}
 }
 
 void Raw2Electron::final()
