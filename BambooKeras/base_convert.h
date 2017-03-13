@@ -20,9 +20,11 @@ public:
 
     BaseConvert(const string &input_path);
 
-    virtual void process(int i){};
+    virtual void process(int i)
+    {};
 
-    virtual void final(){};
+    virtual void final()
+    {};
 
     virtual void process_all();
 
@@ -54,7 +56,7 @@ protected:
     vector<double> *primaryX;
     vector<double> *primaryY;
     vector<double> *primaryZ;
-
+    string uuid;
 };
 
 BaseConvert::BaseConvert(const string &input_path = "*.root")
@@ -110,6 +112,7 @@ BaseConvert::BaseConvert(const string &input_path = "*.root")
     chain->SetBranchAddress("primaryX", &primaryX);
     chain->SetBranchAddress("primaryY", &primaryY);
     chain->SetBranchAddress("primaryZ", &primaryZ);
+    chain->SetBranchAddress("uuid", &uuid);
 }
 
 void BaseConvert::process_all()

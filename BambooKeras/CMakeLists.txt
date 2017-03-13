@@ -6,3 +6,5 @@ add_subdirectory(Readout_Struct)
 add_library(ReadoutWave SHARED ${ROOT_DICT_OUTPUT_SOURCES})
 add_executable(KerasDrift ReadoutWave.cpp KerasDrift.cpp)
 target_link_libraries(KerasDrift readout ReadoutWave)
+
+add_executable(AddUUID AddUUID.cpp)

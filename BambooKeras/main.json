@@ -4,22 +4,24 @@
     "rotation45": true
   },
   "module": {
-    "width_x": 200,
-    "width_y": 200,
-    "rows": 64,
-    "columns": 64
+    "width_x": 201,
+    "width_y": 201,
+    "margin_x": 0.5,
+    "margin_y": 0.5,
+    "rows": 66,
+    "columns": 66
   },
   "plane": {
     "layout": [
-      3,
-      5,
+      4,
+      6,
       7,
       7,
       7,
-      5,
-      3
+      6,
+      4
     ],
-    "gap_x": 10,
-    "gap_y": 10
+    "gap_x": 0,
+    "gap_y": 0
   }
 }

@@ -8,7 +8,6 @@
 #include <TFile.h>
 #include <map>
 #include "argparse.h"
-#include "algorithm"
 #include "ReadoutStruct.hh"
 #include "base_convert.h"
 #include "ReadoutWave.hh"
@@ -199,9 +198,6 @@ private:
     int _out_pixel_count;
     int _record_count;
 
-    double _delta_x;
-    double _delta_y;
-
 };
 
 Raw2Electron::Raw2Electron(const string &input_path, const string &json_file, const string &output_path)
@@ -213,6 +209,7 @@ Raw2Electron::Raw2Electron(const string &input_path, const string &json_file, co
     _output_tree->Branch("runId", &runId, "runId/I");
     _output_tree->Branch("eventId", &eventId, "eventId/I");
     _output_tree->Branch("totalEnergy", &totalEnergy, "totalEnergy/D");
+    _output_tree->Branch("uuid", &uuid);
     _output_tree->Branch("triggerEnergy", &_trigger_Energy, "triggerEnergy/D");
     _output_tree->Branch("readoutWave", &_readout_wave);
     _output_tree->Branch("triggered", &_triggered);
@@ -220,8 +217,6 @@ Raw2Electron::Raw2Electron(const string &input_path, const string &json_file, co
     _output_tree->Branch("outPixelCount", &_out_pixel_count);
     _output_tree->Branch("recordCount", &_record_count);
     _output_tree->Branch("crossCathode", &_cross_cathode);
-    _output_tree->Branch("deltaX", &_delta_x);
-    _output_tree->Branch("deltaY", &_delta_y);
 
 }
 
@@ -248,8 +243,6 @@ void Raw2Electron::process(int i)
     _out_pixel_count = convert_event.out_pixel_count;
     _record_count = convert_event.record_count;
     _cross_cathode = convert_event.cross_cathode;
-    _delta_x = *max_element(xd->begin(), xd->end()) - *min_element(xd->begin(), xd->end());
-    _delta_y = *max_element(yd->begin(), yd->end()) - *min_element(yd->begin(), yd->end());
     _output_tree->Fill();
     //}
 }
