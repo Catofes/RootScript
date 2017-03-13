@@ -224,8 +224,8 @@ void Raw2Electron::process(int i)
 {
     if (i % 10 == 0)cout << i << endl;
     chain->GetEntry(i);
-//    if (totalEnergy < 1200)
-//        return;
+    if (totalEnergy < 1200)
+        return;
     RawHits input;
     input.xd = *xd;
     input.yd = *zd;
