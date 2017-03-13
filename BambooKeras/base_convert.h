@@ -56,7 +56,7 @@ protected:
     vector<double> *primaryX;
     vector<double> *primaryY;
     vector<double> *primaryZ;
-    string uuid;
+    string *uuid;
 };
 
 BaseConvert::BaseConvert(const string &input_path = "*.root")
@@ -85,6 +85,7 @@ BaseConvert::BaseConvert(const string &input_path = "*.root")
     primaryX = 0;
     primaryY = 0;
     primaryZ = 0;
+    uuid = 0;
 
     chain->SetBranchAddress("runId", &runId);
     chain->SetBranchAddress("eventId", &eventId);
