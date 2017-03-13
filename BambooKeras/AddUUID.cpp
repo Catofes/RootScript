@@ -15,6 +15,10 @@ int main(int argc, char *argv[])
         throw std::runtime_error("Missing parameters.");
     TFile *file = new TFile(argv[1], "Update");
     TTree *tree = (TTree *) file->Get("mcTree");
+    if (tree->GetBranch("uuid") != nullptr) {
+        cout << "Already have uuid. Exit." << endl;
+        return 1;
+    }
     string uuid = "";
     tree->Branch("uuid", &uuid);
     for (int i = 0; i < tree->GetEntries(); i++) {
@@ -24,4 +28,5 @@ int main(int argc, char *argv[])
     }
     tree->Write();
     file->Close();
+    return 0;
 }
