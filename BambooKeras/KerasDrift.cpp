@@ -222,8 +222,6 @@ Raw2Electron::Raw2Electron(const string &input_path, const string &json_file, co
 
 void Raw2Electron::process(int i)
 {
-    if (i > 10000)
-        return;
     if (i % 10 == 0)cout << i << endl;
     chain->GetEntry(i);
 //    if (totalEnergy < 1200)
