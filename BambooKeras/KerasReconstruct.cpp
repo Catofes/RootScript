@@ -77,6 +77,8 @@ void convert(const string &input_file_name, const string &output_file_name, cons
             cout << i << "/" << chain->GetEntries() << endl;
         }
         chain->GetEntry(i);
+        if (_trigger_Energy < 2400)
+            continue;
         _xzx->clear();
         _xzz->clear();
         _xze->clear();
