@@ -8,3 +8,6 @@ add_executable(KerasDrift ReadoutWave.cpp KerasDrift.cpp)
 target_link_libraries(KerasDrift readout ReadoutWave)
 
 add_executable(AddUUID AddUUID.cpp)
+
+add_executable(KerasReconstruct KerasReconstruct.cpp)
+target_link_libraries(KerasReconstruct readout ReadoutWave)
