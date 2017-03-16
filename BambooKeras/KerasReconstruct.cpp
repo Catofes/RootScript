@@ -49,7 +49,6 @@ void convert(const string &input_file_name, const string &output_file_name, cons
     vector<double> *_yzy = new vector<double>;
     vector<double> *_yzz = new vector<double>;
     vector<double> *_yze = new vector<double>;
-    vector<double> *_e = new vector<double>;
 
     TFile *output_file = new TFile(output_file_name.c_str(), "RECREATE");
     TTree *output_tree = new TTree("MLData", "MachineLearning Data");
@@ -85,7 +84,6 @@ void convert(const string &input_file_name, const string &output_file_name, cons
         _yzy->clear();
         _yzz->clear();
         _yze->clear();
-        _e->clear();
         for (const auto &u:(*_readout_wave).detectors) {
             int channel_id = u.first;
             if ((channel_id % 1000) < 100) {

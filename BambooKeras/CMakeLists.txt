@@ -11,3 +11,6 @@ add_executable(AddUUID AddUUID.cpp)
 
 add_executable(KerasReconstruct KerasReconstruct.cpp)
 target_link_libraries(KerasReconstruct readout ReadoutWave)
+
+add_executable(KerasPicture KerasPicture.cpp)
+add_executable(MergePicture MergePicture.cpp)
