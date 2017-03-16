@@ -11,11 +11,12 @@ using namespace std;
 
 void convert(const vector<string> &input_file_name, const string &output_file_name)
 {
-    TChain *chain = new TChain("MLPicture");
+    TChain *chain = new TChain("PictureData");
     for (auto &u:input_file_name)
         chain->Add(u.c_str());
     TFile *file = new TFile(output_file_name.c_str(), "RECREATE");
-    chain->Write();
+    TTree *tree = chain->CloneTree();
+    tree->Write();
     file->Close();
 }
 
@@ -23,7 +24,7 @@ int main(int argc, char **argv)
 {
     ArgumentParser parser;
     parser.addArgument("-o", "--output", 1, false);
-    parser.addArgument("--input", "+", false);
+    parser.addArgument("-i", "--input", '+', false);
     parser.parse(argc, argv);
     convert(parser.retrieve<vector<string>>("input"), parser.retrieve<string>("output"));
 }
