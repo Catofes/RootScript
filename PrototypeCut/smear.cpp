@@ -17,10 +17,13 @@ public:
 
     void final();
 
+    double energy_in_readout();
+
 private:
     TFile *_out_file = 0;
     TTree *_tree = 0;
-    double _total_energy = 0;
+    double _smear_energy = 0;
+    double _readout_energy = 0;
     double _resolution = 0;
     TRandom *_rand = new TRandom();
 };
@@ -31,18 +34,36 @@ SmearTotalEnergy::SmearTotalEnergy(const string &input_path, const double &resol
 {
     _out_file = new TFile(output_path.c_str(), "RECREATE");
     _tree = new TTree("SmearEnergy", "SmearEnergy");
-    _tree->Branch("totalEnergy", &_total_energy);
+    _tree->Branch("totalEnergy", &totalEnergy);
+    _tree->Branch("readoutEnergy", &_readout_energy);
+    _tree->Branch("smearEnergy", &_smear_energy);
     _tree->Branch("primaryType", &primaryType);
     _resolution = resolution;
+}
+
+double SmearTotalEnergy::energy_in_readout()
+{
+    double total_energy = 0;
+    for (int i = 0; i < xd->size(); i++) {
+        double x = (*xd)[i];
+        double y = (*zd)[i];
+        double z = (*yd)[i];
+        double e = (*energy)[i];
+        if (-100 < x && x < 100 && -100 < y && y < 100)
+            total_energy += e;
+    }
+    return total_energy;
 }
 
 void SmearTotalEnergy::process(int entry)
 {
     chain->GetEntry(entry);
-    _total_energy = totalEnergy;
-    if (_total_energy > 0)
-        _total_energy = _rand->Gaus(_total_energy, _total_energy * _resolution / 2.355 * sqrt(2457.83 / _total_energy));
-    if (_total_energy > 0);
+    _readout_energy = energy_in_readout();
+    if (_readout_energy > 0)
+        _smear_energy = _rand->Gaus(_readout_energy,
+                                    _readout_energy * _resolution / 2.355 * sqrt(2457.83 / _readout_energy));
+    if (_smear_energy < 0)
+        _smear_energy = 0;
     _tree->Fill();
 }
 

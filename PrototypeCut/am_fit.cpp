@@ -10,7 +10,7 @@ void fit(const string &input_file)
     TChain *chain = new TChain("SmearEnergy");
     chain->Add(input_file.c_str());
     TH1F *h = new TH1F("energy", "Energy", 500, 0, 70);
-    chain->Draw("totalEnergy>>energy", "primaryType==\"Am241\"");
+    chain->Draw("smearEnergy>>energy", "primaryType==\"Am241\"");
     double par[9];
     TF1 *g1 = new TF1("g1", "gaus", 12, 16);
     TF1 *g2 = new TF1("g2", "gaus", 16, 20);
