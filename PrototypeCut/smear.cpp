@@ -62,6 +62,8 @@ void SmearTotalEnergy::process(int entry)
     if (_readout_energy > 0)
         _smear_energy = _rand->Gaus(_readout_energy,
                                     _readout_energy * _resolution / 2.355 * sqrt(2457.83 / _readout_energy));
+    else
+        _smear_energy = 0;
     if (_smear_energy < 0)
         _smear_energy = 0;
     _tree->Fill();
