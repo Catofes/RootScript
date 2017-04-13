@@ -18,7 +18,7 @@ class BaseConvert
 {
 public:
 
-    BaseConvert(const string &input_path);
+    BaseConvert(const string &input_path, const string &chain_name);
 
     virtual void process(int i)
     {};
@@ -59,9 +59,9 @@ protected:
     string *uuid;
 };
 
-BaseConvert::BaseConvert(const string &input_path = "*.root")
+BaseConvert::BaseConvert(const string &input_path = "*.root", const string &chain_name = "mcTree")
 {
-    chain = new TChain("mcTree");
+    chain = new TChain(chain_name.c_str());
     chain->Add(input_path.c_str());
 
     trackId = 0;

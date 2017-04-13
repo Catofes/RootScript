@@ -206,10 +206,35 @@ Raw2Electron::Raw2Electron(const string &input_path, const string &json_file, co
     _readout_wave = new ReadoutWave();
     _output_file = new TFile(output_path.c_str(), "RECREATE");
     _output_tree = new TTree("ReadoutWave", "ReadoutWave");
+
     _output_tree->Branch("runId", &runId, "runId/I");
     _output_tree->Branch("eventId", &eventId, "eventId/I");
-    _output_tree->Branch("totalEnergy", &totalEnergy, "totalEnergy/D");
+    _output_tree->Branch("nHits", &nHits, "nHits/I");
+    _output_tree->Branch("trackId", &trackId);
+    _output_tree->Branch("parentId", &parentId);
+    _output_tree->Branch("type", &type);
+    _output_tree->Branch("parentType", &parentType);
+    _output_tree->Branch("creatorProcess", &creatorProcess);
+    _output_tree->Branch("depositionProcess", &depositionProcess);
+    _output_tree->Branch("volume", &volume);
+    _output_tree->Branch("totalEnergy", &totalEnergy);
+    _output_tree->Branch("xd", &xd);
+    _output_tree->Branch("yd", &yd);
+    _output_tree->Branch("zd", &zd);
+    _output_tree->Branch("td", &td);
+    _output_tree->Branch("energy", &energy);
+    _output_tree->Branch("nPrimaries", &nPrimaries);
+    _output_tree->Branch("primaryType", &primaryType);
+    _output_tree->Branch("primaryId", &primaryId);
+    _output_tree->Branch("primaryEnergy", &primaryEnergy);
+    _output_tree->Branch("primaryPx", &primaryPx);
+    _output_tree->Branch("primaryPy", &primaryPy);
+    _output_tree->Branch("primaryPz", &primaryPz);
+    _output_tree->Branch("primaryX", &primaryX);
+    _output_tree->Branch("primaryY", &primaryY);
+    _output_tree->Branch("primaryZ", &primaryZ);
     _output_tree->Branch("uuid", &uuid);
+
     _output_tree->Branch("triggerEnergy", &_trigger_Energy, "triggerEnergy/D");
     _output_tree->Branch("readoutWave", &_readout_wave);
     _output_tree->Branch("triggered", &_triggered);
@@ -217,7 +242,6 @@ Raw2Electron::Raw2Electron(const string &input_path, const string &json_file, co
     _output_tree->Branch("outPixelCount", &_out_pixel_count);
     _output_tree->Branch("recordCount", &_record_count);
     _output_tree->Branch("crossCathode", &_cross_cathode);
-
 }
 
 void Raw2Electron::process(int i)
@@ -241,7 +265,8 @@ void Raw2Electron::process(int i)
     _out_pixel_count = convert_event.out_pixel_count;
     _record_count = convert_event.record_count;
     _cross_cathode = convert_event.cross_cathode;
-    _output_tree->Fill();
+    if (_trigger_Energy > 2400)
+        _output_tree->Fill();
     //}
 }
 
