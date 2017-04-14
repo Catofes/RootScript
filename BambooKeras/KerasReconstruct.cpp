@@ -27,7 +27,7 @@ public:
 private:
     TFile *output_file;
     TTree *output_tree;
-    ReadoutWave *_readout_wave;
+    ReadoutWave *_readout_wave = 0;
     double _trigger_Energy;
     bool _triggered;
     bool _cross_cathode;
