@@ -1,0 +1,1 @@
+add_executable(PrototypeConvert PrototypeConvert.cpp jsoncpp.cpp)
