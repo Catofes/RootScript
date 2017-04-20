@@ -120,10 +120,10 @@ void PrototypeConvert::load_parameter(string &input_path)
     else {
         int s = root["micromegas_structure"].size();
         for (int i = 0; i < s; i++) {
-            double offset_y = (i + 1 - s) * _micromegas_size;
+            double offset_y = (i + 0.5 - s/2.) * _micromegas_size;
             int k = root["micromegas_structure"][i].asInt();
             for (int j = 0; j < k; j++) {
-                double offset_x = (j + 1 - k) * _micromegas_size;
+                double offset_x = (j + 0.5 - k/2.) * _micromegas_size;
                 _micromegas_info.push_back(make_tuple(offset_x, offset_y));
             }
         }
