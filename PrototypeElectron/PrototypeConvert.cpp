@@ -70,7 +70,7 @@ PrototypeConvert::PrototypeConvert(string &input_path, string &json_path, const 
     _longitudinal_diffusion = 0.0139049; // cm1/2
     _drift_velocity = 1.87139; // mm/us
     _z_plane = 392.5; //mm
-    _trigger_threshold = 1200; //keV
+    _trigger_threshold = 10; //keV
     _trigger_bin_length = 0.2; //ms
     _trigger_bin_size = 512;
     _trigger_bin_offset = 256;
@@ -81,6 +81,7 @@ PrototypeConvert::PrototypeConvert(string &input_path, string &json_path, const 
     _output_file = new TFile(output_path.c_str(), "RECREATE");
     _output_tree = new TTree("DriftResult", "DriftResult");
 
+    _output_tree->Branch("totalEnergy", &totalEnergy);
     _output_tree->Branch("triggerEnergy", &_trigger_energy, "triggerEnergy/D");
     _output_tree->Branch("triggered", &_triggered);
     _output_tree->Branch("gapCount", &_gap_count);
@@ -153,7 +154,7 @@ void PrototypeConvert::process(int i)
         _trigger_energy = 0;
     } else {
         _triggered = true;
-        _trigger_energy = (get<2>(result) - get<1>(result)) * _work_function;
+        _trigger_energy = (get<2>(result) - get<0>(result)) * _work_function;
     }
     _output_tree->Fill();
 }
@@ -195,9 +196,9 @@ void PrototypeConvert::get_electron_info()
 bool PrototypeConvert::out_of_border(double x, double y)
 {
     for (auto &u:_micromegas_info)
-        if (abs(x - get<0>(u)) < _micromegas_size && abs(y - get<1>(u)) < _micromegas_size)
-            return true;
-    return false;
+        if ((abs(x - get<0>(u)) < _micromegas_size) && (abs(y - get<1>(u)) < _micromegas_size))
+            return false;
+    return true;
 }
 
 tuple<int, int, int> PrototypeConvert::get_trigger_info(vector<double> &electron_info)
