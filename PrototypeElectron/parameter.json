@@ -4,6 +4,8 @@
   "transverse_diffusion": 0.0101968,
   "longitudinal_diffusion": 0.0139049,
   "drift_velocity": 1.87139,
-  "z_plane": 990,
-  "trigger_threshold": 1200
+  "z_plane": 392.5,
+  "trigger_threshold": 1200,
+  "micromegas_size": 200,
+  "micromegas_structure": [2, 3, 2]
 }

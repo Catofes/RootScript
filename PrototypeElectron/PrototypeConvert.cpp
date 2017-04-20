@@ -13,11 +13,13 @@
 
 using namespace std;
 
+typedef tuple<double, double> MicroMegas; //x,y in mm
+
 class PrototypeConvert
         : public BaseConvert
 {
 public:
-    PrototypeConvert(string &input_path, string &output_path, string &json_path);
+    PrototypeConvert(string &input_path, string &output_path, const string &json_path);
 
     void load_parameter(string &input_path);
 
@@ -28,44 +30,58 @@ public:
 private:
     int get_electron_numbers(double energy);
 
+    bool out_of_border(double x, double y);
+
     void get_electron_info();
+
+    tuple<int, int, int> get_trigger_info(vector<double> &electron_info);
 
     TFile *_output_file;
     TTree *_output_tree;
     TRandom random;
 
-    double work_function;
-    double fano;
-    double transverse_diffusion;
-    double longitudinal_diffusion;
-    double drift_velocity;
-    double z_plane;
-    double trigger_threshold;
+    double _work_function;
+    double _fano;
+    double _transverse_diffusion;
+    double _longitudinal_diffusion;
+    double _drift_velocity;
+    double _z_plane;
+    double _trigger_threshold;
+    double _micromegas_size;
+    double _trigger_bin_length;
+    double _trigger_bin_size;
+    double _trigger_bin_offset;
 
     int _gap_count;
     int _record_count;
     bool _triggered;
-    double _trigger_Energy;
+    double _trigger_energy;
 
     vector<double> _electron_info;
+    vector<MicroMegas> _micromegas_info;
 };
 
-PrototypeConvert::PrototypeConvert(string &input_path, string &output_path, string &json_path)
+PrototypeConvert::PrototypeConvert(string &input_path, string &json_path, const string &output_path)
         : BaseConvert(input_path, "mcTree"), random(), _electron_info()
 {
-    work_function = 21.9 / 1000;
-    fano = 0.14;
-    transverse_diffusion = 0.0101968; // cm1/2
-    longitudinal_diffusion = 0.0139049; // cm1/2
-    drift_velocity = 1.87139; // mm/us
-    z_plane = 990; //mm
-    trigger_threshold = 1200;//keV
+    _work_function = 21.9 / 1000;
+    _fano = 0.14;
+    _transverse_diffusion = 0.0101968; // cm1/2
+    _longitudinal_diffusion = 0.0139049; // cm1/2
+    _drift_velocity = 1.87139; // mm/us
+    _z_plane = 392.5; //mm
+    _trigger_threshold = 1200; //keV
+    _trigger_bin_length = 0.2; //ms
+    _trigger_bin_size = 512;
+    _trigger_bin_offset = 256;
+    _micromegas_size = 200; //mm
+
     load_parameter(json_path);
 
     _output_file = new TFile(output_path.c_str(), "RECREATE");
     _output_tree = new TTree("DriftResult", "DriftResult");
 
-    _output_tree->Branch("triggerEnergy", &_trigger_Energy, "triggerEnergy/D");
+    _output_tree->Branch("triggerEnergy", &_trigger_energy, "triggerEnergy/D");
     _output_tree->Branch("triggered", &_triggered);
     _output_tree->Branch("gapCount", &_gap_count);
     _output_tree->Branch("recordCount", &_record_count);
@@ -83,32 +99,67 @@ void PrototypeConvert::load_parameter(string &input_path)
         throw std::runtime_error("Cannot parser json file.");
 
     if (!root["work_function"].isNull())
-        work_function = root["work_function"].asDouble();
+        _work_function = root["work_function"].asDouble();
     if (!root["fano"].isNull())
-        fano = root["fano"].asDouble();
+        _fano = root["fano"].asDouble();
     if (!root["transverse_diffusion"].isNull())
-        transverse_diffusion = root["transverse_diffusion"].asDouble();
+        _transverse_diffusion = root["transverse_diffusion"].asDouble();
     if (!root["longitudinal_diffusion"].isNull())
-        longitudinal_diffusion = root["longitudinal_diffusion"].asDouble();
+        _longitudinal_diffusion = root["longitudinal_diffusion"].asDouble();
     if (!root["drift_velocity"].isNull())
-        drift_velocity = root["drift_velocity"].asDouble();
+        _drift_velocity = root["drift_velocity"].asDouble();
     if (!root["z_plane"].isNull())
-        z_plane = root["z_plane"].asDouble();
+        _z_plane = root["z_plane"].asDouble();
     if (!root["trigger_threshold"].isNull())
-        trigger_threshold = root["trigger_threshold"].asDouble();
+        _trigger_threshold = root["trigger_threshold"].asDouble();
+    if (!root["micromegas_size"].isNull())
+        _micromegas_size = root["micromegas_size"].asDouble();
+    if (root["micromegas_structure"].isNull())
+        throw std::runtime_error("MicroMegas structure error.");
+    else {
+        int s = root["micromegas_structure"].size();
+        for (int i = 0; i < s; i++) {
+            double offset_y = (i + 1 - s) * _micromegas_size;
+            int k = root["micromegas_structure"][i].asInt();
+            for (int j = 0; j < k; j++) {
+                double offset_x = (j + 1 - k) * _micromegas_size;
+                _micromegas_info.push_back(make_tuple(offset_x, offset_y));
+            }
+        }
+    }
 }
 
 int PrototypeConvert::get_electron_numbers(double energy)
 {
     if (energy <= 0)
         return 0;
-    int n = int(round(random.Gaus(energy / work_function, TMath::Sqrt(fano * energy / work_function))));
+    int n = int(round(random.Gaus(energy / _work_function, TMath::Sqrt(_fano * energy / _work_function))));
     return n > 0 ? n : 0;
+}
+
+void PrototypeConvert::process(int i)
+{
+    chain->GetEntry(i);
+    _gap_count = 0;
+    _record_count = 0;
+    _triggered = false;
+    _trigger_energy = 0;
+    _electron_info.clear();
+
+    get_electron_info();
+    auto result = get_trigger_info(_electron_info);
+    if (get<0>(result) == -1) {
+        _triggered = false;
+        _trigger_energy = 0;
+    } else {
+        _triggered = true;
+        _trigger_energy = (get<2>(result) - get<1>(result)) * _work_function;
+    }
+    _output_tree->Fill();
 }
 
 void PrototypeConvert::get_electron_info()
 {
-    _electron_info.clear();
     if ((*xd).size() <= 0)
         return;
     for (auto i = 0; i < (*xd).size(); i++) {
@@ -117,12 +168,12 @@ void PrototypeConvert::get_electron_info()
         auto z = (*zd)[i];
         auto t = (*td)[i];
         auto e = (*energy)[i];
-        double drift_z = z_plane - z;
+        double drift_z = _z_plane - z;
         if (drift_z < 0)
             continue;
-        double drift_time = drift_z / drift_velocity;//in us
-        double r_diffusion_sigma = transverse_diffusion * TMath::Sqrt(drift_z / 10) * 10;
-        double z_diffusion_sigma = longitudinal_diffusion * TMath::Sqrt(drift_z / 10) * 10;
+        double drift_time = drift_z / _drift_velocity;//in us
+        double r_diffusion_sigma = _transverse_diffusion * TMath::Sqrt(drift_z / 10) * 10;
+        double z_diffusion_sigma = _longitudinal_diffusion * TMath::Sqrt(drift_z / 10) * 10;
         int electron_numbers = get_electron_numbers(e);
         for (auto j = 0; j < electron_numbers; j++) {
             double r_diffusion = random.Gaus(0, r_diffusion_sigma);
@@ -130,16 +181,75 @@ void PrototypeConvert::get_electron_info()
             double theta = random.Rndm() * 2 * TMath::Pi();
             double xx = x + r_diffusion * TMath::Sin(theta);
             double yy = y + r_diffusion * TMath::Cos(theta);
-            double tt = t * 1e6 + drift_time + z_diffusion / drift_velocity;
-            int channel_id = plane.GetChannel(xx, yy);
-            //int channel_id = 1;
-            if (channel_id >= 0) {
-                electron_info.push_back(make_tuple(channel_id, tt));
-                record_count++;
-            } else if (channel_id == -1)
-                out_pixel_count++;
-            else if (channel_id == -2)
-                gap_count++;
+            double tt = t * 1e6 + drift_time + z_diffusion / _drift_velocity;
+            if (out_of_border(xx, yy))
+                _gap_count++;
+            else {
+                _record_count++;
+                _electron_info.push_back(tt);
+            }
         }
     }
+}
+
+bool PrototypeConvert::out_of_border(double x, double y)
+{
+    for (auto &u:_micromegas_info)
+        if (abs(x - get<0>(u)) < _micromegas_size && abs(y - get<1>(u)) < _micromegas_size)
+            return true;
+    return false;
+}
+
+tuple<int, int, int> PrototypeConvert::get_trigger_info(vector<double> &electron_info)
+{
+    sort(electron_info.begin(), electron_info.end(),
+         [](double &l, double &r) { return l < r; });
+
+    if (electron_info.size() <= 0)
+        return make_tuple(-1, -1, -1);
+    int start = 0;
+    int electron_num_need = int(floor(_trigger_threshold / _work_function));
+    bool find_it = false;
+    while (start + electron_num_need < electron_info.size()) {
+        if ((electron_info[start + electron_num_need] - electron_info[start]) <
+            _trigger_bin_offset * _trigger_bin_length) {
+            find_it = true;
+            break;
+        }
+        start++;
+    }
+    if (find_it) {
+        int trigger = start + electron_num_need;
+        double end_time = electron_info[start + electron_num_need] +
+                          (_trigger_bin_size - _trigger_bin_offset) * _trigger_bin_length;
+        int end = int(find_if(electron_info.begin(), electron_info.end(),
+                              [end_time](double l) { return l > end_time; }) - electron_info.begin());
+        return make_tuple(start, trigger, end);
+    }
+
+    return make_tuple(-1, -1, -1);
+}
+
+void PrototypeConvert::final()
+{
+    process_all();
+    _output_tree->Write();
+    _output_file->Close();
+}
+
+int main(int argc, char **argv)
+{
+    ArgumentParser parser;
+    parser.addArgument("-i", "--input", 1, false);
+    parser.addArgument("-j", "--json", 1, false);
+    parser.addArgument("-o", "--output", 1, true);
+    parser.parse(argc, argv);
+    PrototypeConvert *convert;
+    if (parser.count("o"))
+        convert = new PrototypeConvert(parser.retrieve<string>("input"), parser.retrieve<string>("json"),
+                                       parser.retrieve<string>("output"));
+    else
+        convert = new PrototypeConvert(parser.retrieve<string>("input"), parser.retrieve<string>("json"),
+                                       "output.root");
+    convert->final();
 }
