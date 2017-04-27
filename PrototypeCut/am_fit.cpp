@@ -2,6 +2,8 @@
 #include <TChain.h>
 #include <TH1F.h>
 #include <TF1.h>
+#include <TApplication.h>
+#include <argparse.h>
 
 using namespace std;
 
@@ -35,5 +37,10 @@ void fit(const string &input_file)
 
 int main(int argc, char *argv[])
 {
-    fit(string(argv[1]));
+    ArgumentParser parser;
+    parser.addArgument("-i", "--input", 1, false);
+    parser.parse(argc, argv);
+    TApplication *myapp = new TApplication("App", &argc, argv);
+    fit(parser.retrieve<string>("i"));
+    myapp->Run();
 }
