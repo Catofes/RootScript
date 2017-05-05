@@ -86,6 +86,7 @@ PrototypeConvert::PrototypeConvert(string &input_path, string &json_path, const 
     _output_tree->Branch("triggered", &_triggered);
     _output_tree->Branch("gapCount", &_gap_count);
     _output_tree->Branch("recordCount", &_record_count);
+    _output_tree->Branch("primaryType", &primaryType);
 }
 
 void PrototypeConvert::load_parameter(string &input_path)
