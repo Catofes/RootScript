@@ -26,3 +26,6 @@ add_subdirectory(RootExam)
 add_subdirectory(PrototypeCut)
 add_subdirectory(BambooKeras)
 add_subdirectory(PrototypeElectron)
+add_subdirectory(GasCalculate)
+
+
