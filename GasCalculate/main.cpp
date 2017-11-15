@@ -18,7 +18,8 @@ int main(int argc, char * argv[]) {
     MediumMagboltz* gas = new MediumMagboltz();
     gas->SetTemperature(temperature);
     gas->SetPressure(pressure);
-    gas->SetComposition("Ar", 95., "ISO", 5);
+	//gas->SetComposition("Ar", 95., "ISO", 5);
+    gas->SetComposition("Xe", 100.);
 
     // Set the field range to be covered by the gas table.
     const int nFields = 1;

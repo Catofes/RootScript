@@ -16,3 +16,5 @@ add_executable(KerasPicture KerasPicture.cpp)
 target_link_libraries(KerasPicture readout ReadoutWave)
 
 add_executable(MergePicture MergePicture.cpp)
+add_executable(DrawWave DrawWave.cpp)
+target_link_libraries(DrawWave readout ReadoutWave)
