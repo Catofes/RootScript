@@ -7,6 +7,9 @@
 #include <TRandom.h>
 #include <ReadoutStruct.hh>
 #include <TMath.h>
+#include <TLine.h>
+#include <TText.h>
+
 struct RawHits
 {
     vector<double> xd, yd, zd, td, energy;
@@ -19,15 +22,17 @@ class DrawWave
         : public BaseConvert
 {
 public:
-    DrawWave(const string &input_path,const string &json_file, const string &output_path);
+    DrawWave(const string &input_path, const string &json_file, const string &output_path);
 
     void process(int i);
 
     void final();
 
-    Wave convert(const RawHits &input);
+    pair<Wave, tuple<int, int, int>> convert(const RawHits &input);
 
     int get_electron_numbers(double energy);
+
+    tuple<int, int, int> get_trigger_offset(vector<ElectronInfo> &electron_info);
 
     TFile *output_file;
     TH1F *output_th1f;
@@ -71,7 +76,7 @@ public:
 
 };
 
-DrawWave::DrawWave(const string &input_file_name,const string &json_file, const string &output_path)
+DrawWave::DrawWave(const string &input_file_name, const string &json_file, const string &output_path)
         : BaseConvert(input_file_name, "PictureData"), plane(json_file), random(222)
 {
     work_function = 21.9 / 1000;
@@ -109,12 +114,54 @@ void DrawWave::process(int i)
     input.zd = *yd;
     input.td = *td;
     input.energy = *energy;
-    auto wave = convert(input);
-
+    auto result = convert(input);
+    auto wave = result.first;
+    auto info = result.second;
     output_th1f = new TH1F("wave", "", wave.size(), 0, wave.size());
     output_th1f->GetXaxis()->SetTitle("Time bins");
     output_th1f->GetYaxis()->SetTitle("Electron count");
     output_th1f->GetYaxis()->SetTitleOffset(1.2);
+    output_th1f->SetStats(false);
+
+    auto y_max = output_th1f->GetMaximum();
+    auto y_min = output_th1f->GetMinimum();
+
+    TLine *line = new TLine(get<0>(info), y_max, get<0>(info), y_min);
+    line->SetLineColor(kRed);
+    line->Draw();
+
+    TText *t = new TText(get<0>(info),y_max,"Start Point");
+    t->SetTextAlign(22);
+    t->SetTextColor(kRed+2);
+    t->SetTextFont(43);
+    t->SetTextSize(40);
+    t->SetTextAngle(-45);
+    t->Draw();
+
+    line = new TLine(get<1>(info), y_max, get<1>(info), y_min);
+    line->SetLineColor(kRed);
+    line->Draw();
+
+    t = new TText(get<1>(info),y_max,"Trigger Point");
+    t->SetTextAlign(22);
+    t->SetTextColor(kRed+2);
+    t->SetTextFont(43);
+    t->SetTextSize(40);
+    t->SetTextAngle(-45);
+    t->Draw();
+
+    line = new TLine(get<2>(info), y_max, get<2>(info), y_min);
+    line->SetLineColor(kRed);
+    line->Draw();
+
+    t = new TText(get<2>(info),y_max,"End Point");
+    t->SetTextAlign(22);
+    t->SetTextColor(kRed+2);
+    t->SetTextFont(43);
+    t->SetTextSize(40);
+    t->SetTextAngle(-45);
+    t->Draw();
+
 
     for (auto k = 0; k < wave.size(); k++) {
         output_th1f->SetBinContent(k + 1, wave[k]);
@@ -127,7 +174,7 @@ void DrawWave::final()
     output_file->Close();
 }
 
-Wave DrawWave::convert(const RawHits &input)
+pair<Wave, tuple<int, int, int>> DrawWave::convert(const RawHits &input)
 {
     gap_count = 0;
     out_pixel_count = 0;
@@ -135,7 +182,7 @@ Wave DrawWave::convert(const RawHits &input)
     cross_cathode = false;
 
     if (input.xd.size() <= 0)
-        return Wave();
+        return make_pair(Wave(), make_tuple(0, 0, 0));
     bool in_top = input.zd[0] > 0;
 
     vector<ElectronInfo> electron_info;
@@ -147,7 +194,7 @@ Wave DrawWave::convert(const RawHits &input)
         auto e = input.energy[i];
         if (z > 0 != in_top) {
             cross_cathode = true;
-            return Wave();
+            return make_pair(Wave(), make_tuple(0, 0, 0));
         }
         double drift_z = z_plane - abs(z);
         if (drift_z < 0)
@@ -177,16 +224,25 @@ Wave DrawWave::convert(const RawHits &input)
     sort(electron_info.begin(), electron_info.end(),
          [](ElectronInfo &l, ElectronInfo &r) { return get<1>(l) < get<1>(r); });
 
+    auto trigger_info = get_trigger_offset(electron_info);
 
     Wave result;
     auto start_time = get<1>(electron_info[0]);
-    int max_t = int(floor(get<1>(electron_info[electron_info.size()-1])-start_time) / 0.2 + 256);
-    result.resize(max_t+1,0);
-    for (auto &hit:electron_info){
+    auto start_point = int(floor((get<0>(trigger_info) - start_time) / 0.2));
+    auto trigger_point = int(floor((get<1>(trigger_info) - start_time) / 0.2));
+    auto end_point = int(floor((get<2>(trigger_info) - start_time) / 0.2));
+    if ((end_point - trigger_point) < 256)
+        end_point = trigger_point + 256;
+    auto max_t = int(floor((get<1>(electron_info[electron_info.size() - 1]) - start_time) / 0.2));
+    if (max_t < end_point)
+        max_t = end_point;
+    result.resize(max_t + 1, 0);
+    for (auto &hit:electron_info) {
         int bin = int(floor((get<1>(hit) - start_time) / 0.2));
         result[bin]++;
     }
-    return result;
+
+    return make_pair(result, make_tuple(start_point, trigger_point, end_point));
 }
 
 int DrawWave::get_electron_numbers(double energy)
@@ -197,6 +253,30 @@ int DrawWave::get_electron_numbers(double energy)
     return n > 0 ? n : 0;
 }
 
+tuple<int, int, int> DrawWave::get_trigger_offset(vector<ElectronInfo> &electron_info)
+{
+    if (electron_info.size() <= 0)
+        return make_tuple(-1, -1, -1);
+    int start = 0;
+    int electron_num_need = int(floor(trigger_threshold / work_function));
+    bool find_it = false;
+    while (start + electron_num_need < electron_info.size()) {
+        if ((get<1>(electron_info[start + electron_num_need]) - get<1>(electron_info[start])) < 256 * 0.2) {
+            find_it = true;
+            break;
+        }
+        start++;
+    }
+    if (find_it) {
+        int trigger = start + electron_num_need;
+        double end_time = get<1>(electron_info[start + electron_num_need]) + 256 * 0.2;
+        int end = int(find_if(electron_info.begin(), electron_info.end(),
+                              [end_time](ElectronInfo l) { return get<1>(l) > end_time; }) - electron_info.begin());
+        return make_tuple(start, trigger, end);
+    }
+
+    return make_tuple(-1, -1, -1);
+}
 
 int main(int argc, char **argv)
 {
@@ -206,7 +286,8 @@ int main(int argc, char **argv)
     parser.addArgument("-j", "--json", 1, false);
     parser.addArgument("-o", "--output", 1, true);
     parser.parse(argc, argv);
-    auto draw = new DrawWave(parser.retrieve<string>("input"), parser.retrieve<string>("json"),parser.retrieve<string>("output"));
+    auto draw = new DrawWave(parser.retrieve<string>("input"), parser.retrieve<string>("json"),
+                             parser.retrieve<string>("output"));
     draw->process(atoi(parser.retrieve<string>("entry").c_str()));
     draw->final();
 }
