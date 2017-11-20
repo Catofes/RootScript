@@ -147,6 +147,7 @@ void T3DConvert::process(int i)
 
 void T3DConvert::final()
 {
+    process_all();
     output_tree->Write();
     output_file->Close();
 }
@@ -332,12 +333,10 @@ int main(int argc, char **argv)
 {
     ArgumentParser parser;
     parser.addArgument("-i", "--input", 1, false);
-    parser.addArgument("-e", "--entry", 1, false);
     parser.addArgument("-j", "--json", 1, false);
     parser.addArgument("-o", "--output", 1, true);
     parser.parse(argc, argv);
     auto draw = new T3DConvert(parser.retrieve<string>("input"), parser.retrieve<string>("json"),
                                parser.retrieve<string>("output"));
-    draw->process(atoi(parser.retrieve<string>("entry").c_str()));
     draw->final();
 }
