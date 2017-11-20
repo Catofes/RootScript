@@ -18,3 +18,6 @@ target_link_libraries(KerasPicture readout ReadoutWave)
 add_executable(MergePicture MergePicture.cpp)
 add_executable(DrawWave DrawWave.cpp)
 target_link_libraries(DrawWave readout ReadoutWave)
+
+add_executable(3DReconstruct 3DReconstruct.cpp)
+target_link_libraries(3DReconstruct readout ReadoutWave)
