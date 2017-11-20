@@ -9,6 +9,7 @@
 #include <TMath.h>
 #include <TLine.h>
 #include <TText.h>
+#include <TCanvas.h>
 
 struct RawHits
 {
@@ -36,6 +37,7 @@ public:
 
     TFile *output_file;
     TH1F *output_th1f;
+    TCanvas *canvas;
     ReadoutWave *_readout_wave = 0;
     double _trigger_Energy;
     bool _triggered;
@@ -103,6 +105,7 @@ DrawWave::DrawWave(const string &input_file_name, const string &json_file, const
     chain->SetBranchAddress("yze", &_yze);
 
     output_file = new TFile(output_path.c_str(), "RECREATE");
+    canvas = new TCanvas("c1");
 }
 
 void DrawWave::process(int i)
@@ -117,11 +120,18 @@ void DrawWave::process(int i)
     auto result = convert(input);
     auto wave = result.first;
     auto info = result.second;
+
     output_th1f = new TH1F("wave", "", wave.size(), 0, wave.size());
     output_th1f->GetXaxis()->SetTitle("Time bins");
     output_th1f->GetYaxis()->SetTitle("Electron count");
     output_th1f->GetYaxis()->SetTitleOffset(1.2);
     output_th1f->SetStats(false);
+
+    for (auto k = 0; k < wave.size(); k++) {
+        output_th1f->SetBinContent(k + 1, wave[k]);
+    }
+
+    output_th1f->Draw();
 
     auto y_max = output_th1f->GetMaximum();
     auto y_min = output_th1f->GetMinimum();
@@ -130,42 +140,36 @@ void DrawWave::process(int i)
     line->SetLineColor(kRed);
     line->Draw();
 
-    TText *t = new TText(get<0>(info),y_max,"Start Point");
-    t->SetTextAlign(22);
-    t->SetTextColor(kRed+2);
-    t->SetTextFont(43);
-    t->SetTextSize(40);
-    t->SetTextAngle(-45);
+    TText *t = new TText(get<0>(info)+5, y_max, "Start Point");
+    t->SetTextColor(kRed);
+    t->SetTextSize(0.05);
+    t->SetTextAngle(-90);
     t->Draw();
 
     line = new TLine(get<1>(info), y_max, get<1>(info), y_min);
-    line->SetLineColor(kRed);
+    line->SetLineColor(kBlue);
     line->Draw();
 
-    t = new TText(get<1>(info),y_max,"Trigger Point");
-    t->SetTextAlign(22);
-    t->SetTextColor(kRed+2);
-    t->SetTextFont(43);
-    t->SetTextSize(40);
-    t->SetTextAngle(-45);
+    t = new TText(get<1>(info)+5, y_max, "Trigger Point");
+    t->SetTextColor(kBlue);
+    t->SetTextSize(0.05);
+    t->SetTextAngle(-90);
     t->Draw();
 
     line = new TLine(get<2>(info), y_max, get<2>(info), y_min);
-    line->SetLineColor(kRed);
+    line->SetLineColor(kMagenta);
     line->Draw();
 
-    t = new TText(get<2>(info),y_max,"End Point");
-    t->SetTextAlign(22);
-    t->SetTextColor(kRed+2);
-    t->SetTextFont(43);
-    t->SetTextSize(40);
-    t->SetTextAngle(-45);
+    t = new TText(get<2>(info)-20, y_max, "End Point");
+    t->SetTextColor(kMagenta);
+    t->SetTextSize(0.05);
+    t->SetTextAngle(-90);
     t->Draw();
 
+    canvas->Update();
+    canvas->Write();
 
-    for (auto k = 0; k < wave.size(); k++) {
-        output_th1f->SetBinContent(k + 1, wave[k]);
-    }
+
 }
 
 void DrawWave::final()
@@ -228,11 +232,9 @@ pair<Wave, tuple<int, int, int>> DrawWave::convert(const RawHits &input)
 
     Wave result;
     auto start_time = get<1>(electron_info[0]);
-    auto start_point = int(floor((get<0>(trigger_info) - start_time) / 0.2));
-    auto trigger_point = int(floor((get<1>(trigger_info) - start_time) / 0.2));
-    auto end_point = int(floor((get<2>(trigger_info) - start_time) / 0.2));
-    if ((end_point - trigger_point) < 256)
-        end_point = trigger_point + 256;
+    auto trigger_point = int(floor((get<1>(electron_info[get<1>(trigger_info)]) - start_time) / 0.2));
+    auto start_point = (trigger_point - 256) >= 0 ? trigger_point - 256 : 0;
+    auto end_point = trigger_point + 256;
     auto max_t = int(floor((get<1>(electron_info[electron_info.size() - 1]) - start_time) / 0.2));
     if (max_t < end_point)
         max_t = end_point;
