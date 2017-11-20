@@ -365,6 +365,8 @@ int main(int argc, char **argv)
             auto draw = new T3DConvert(parser.retrieve<string>("input"), parser.retrieve<string>("json"),
                                        parser.retrieve<string>("output") + to_string(i) + ".root");
             draw->final(i * (entries / subprocess), entries / subprocess, i);
+            std::cout<<"subprocess@"<<i<<" finished."<<endl;
+            exit(EXIT_SUCCESS);
         }
         if (child_pid < 0) {
             // Forking failed.
