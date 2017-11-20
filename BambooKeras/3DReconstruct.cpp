@@ -10,6 +10,7 @@
 #include <TLine.h>
 #include <TText.h>
 #include <TCanvas.h>
+#include <sys/wait.h>
 
 struct RawHits
 {
@@ -28,6 +29,8 @@ public:
     void process(int i);
 
     void final();
+
+    void final(int offset, int limit, int pid);
 
     ReadoutWave raw2wave(const RawHits &input);
 
@@ -150,6 +153,16 @@ void T3DConvert::final()
     process_all();
     output_tree->Write();
     output_file->Close();
+}
+
+void T3DConvert::final(int offset, int limit, int pid)
+{
+    cout << "Total " << limit << " Events." << endl;
+    for (int i = offset; i < offset + limit; i++) {
+        if (i % 1000 == 0)
+            cout << "subprocess@" << pid << ":" << i << "/" << limit << endl;
+        process(i);
+    }
 }
 
 ReadoutWave T3DConvert::raw2wave(const RawHits &input)
@@ -335,8 +348,43 @@ int main(int argc, char **argv)
     parser.addArgument("-i", "--input", 1, false);
     parser.addArgument("-j", "--json", 1, false);
     parser.addArgument("-o", "--output", 1, true);
+    parser.addArgument("-f", "--fork", 1, false);
     parser.parse(argc, argv);
-    auto draw = new T3DConvert(parser.retrieve<string>("input"), parser.retrieve<string>("json"),
-                               parser.retrieve<string>("output"));
-    draw->final();
+
+    auto chain = new TChain("PictureData");
+    chain->Add(parser.retrieve<string>("input").c_str());
+    auto entries = chain->GetEntries();
+    delete chain;
+
+    int subprocess = stoi(parser.retrieve<string>("fork"));
+
+    for (int i = 0; i < subprocess; i++) {
+        auto child_pid = fork();
+
+        if (child_pid == 0) {
+            auto draw = new T3DConvert(parser.retrieve<string>("input"), parser.retrieve<string>("json"),
+                                       parser.retrieve<string>("output") + to_string(i) + ".root");
+            draw->final(i * (entries / subprocess), entries / subprocess, i);
+        }
+        if (child_pid < 0) {
+            // Forking failed.
+            perror("fork()");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    while (true) {
+        int status;
+        pid_t done = wait(&status);
+        if (done == -1) {
+            if (errno == ECHILD) break; // no more child processes
+        } else {
+            if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+                cerr << "pid " << done << " failed" << endl;
+                exit(1);
+            }
+        }
+    }
+
+    //draw->final();
 }
