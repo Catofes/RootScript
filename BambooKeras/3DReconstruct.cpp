@@ -102,7 +102,7 @@ T3DConvert::T3DConvert(const string &input_file_name, const string &json_file, c
 
 
     output_file = new TFile(output_path.c_str(), "RECREATE");
-    output_tree = new TTree("3DPictureData", "Picture Data");
+    output_tree = new TTree("PictureData3D", "Picture Data");
 
     output_tree->Branch("runId", &runId, "runId/I");
     output_tree->Branch("eventId", &eventId, "eventId/I");
@@ -128,9 +128,10 @@ T3DConvert::T3DConvert(const string &input_file_name, const string &json_file, c
     output_tree->Branch("cz", &_cluster_z);
     output_tree->Branch("ce", &_cluster_e);
     output_tree->Branch("cluster_max_energy", &_cluster_max_energy);
+    chain->SetBranchAddress("event_type", &_type);
     output_tree->Branch("event_type", &_type);
+    chain->SetBranchAddress("usage", &_usage);
     output_tree->Branch("usage", &_usage);
-
 }
 
 void T3DConvert::process(int i)
