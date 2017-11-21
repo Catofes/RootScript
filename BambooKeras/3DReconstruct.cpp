@@ -61,7 +61,7 @@ public:
     vector<int> *_cluster_y = new vector<int>;
     vector<int> *_cluster_z = new vector<int>;
     vector<double> *_cluster_e = new vector<double>;
-    string _type;
+    string *_type;
     double _cluster_max_energy;
     int _usage;
 

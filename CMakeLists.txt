@@ -11,7 +11,7 @@ execute_process(
         OUTPUT_VARIABLE ROOT_FLAGS
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_FLAGS} -std=c++11 -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_FLAGS} -std=c++11 -march=native -Wl,--no-as-needed")
 
 include_directories(ArgParser)
 
@@ -26,6 +26,6 @@ add_subdirectory(RootExam)
 add_subdirectory(PrototypeCut)
 add_subdirectory(BambooKeras)
 add_subdirectory(PrototypeElectron)
-add_subdirectory(GasCalculate)
+#add_subdirectory(GasCalculate)
 
 
