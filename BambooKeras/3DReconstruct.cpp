@@ -65,11 +65,12 @@ public:
     double _cluster_max_energy;
     int _usage;
 
-
+    bool triggered;
     int gap_count;
     int out_pixel_count;
     int record_count;
     bool cross_cathode;
+    double trigger_Energy;
 
     ReadoutPlane plane;
 
@@ -111,12 +112,12 @@ T3DConvert::T3DConvert(const string &input_file_name, const string &json_file, c
     output_tree->Branch("energy", &energy);
     output_tree->Branch("uuid", &uuid);
 
-    output_tree->Branch("triggerEnergy", &_trigger_Energy);
-    output_tree->Branch("triggered", &_triggered);
-    output_tree->Branch("gapCount", &_gap_count);
-    output_tree->Branch("outPixelCount", &_out_pixel_count);
-    output_tree->Branch("recordCount", &_record_count);
-    output_tree->Branch("crossCathode", &_cross_cathode);
+    output_tree->Branch("triggerEnergy", &trigger_Energy);
+    output_tree->Branch("triggered", &triggered);
+    output_tree->Branch("gapCount", &gap_count);
+    output_tree->Branch("outPixelCount", &out_pixel_count);
+    output_tree->Branch("recordCount", &record_count);
+    output_tree->Branch("crossCathode", &cross_cathode);
 
     output_tree->Branch("x", &_x);
     output_tree->Branch("y", &_y);
@@ -164,6 +165,8 @@ void T3DConvert::final(int offset, int limit, int pid)
             cout << "subprocess@" << pid << ":" << i << "/" << limit << endl;
         process(i);
     }
+    output_tree->Write();
+    output_file->Close();
 }
 
 ReadoutWave T3DConvert::raw2wave(const RawHits &input)
@@ -236,6 +239,8 @@ ReadoutWave T3DConvert::raw2wave(const RawHits &input)
     result.trigger = get<1>(trigger_info);
     result.end = get<2>(trigger_info);
     result.total_energy = (get<2>(trigger_info) - get<0>(trigger_info)) * work_function;
+    trigger_Energy = result.total_energy;
+    triggered = true;
     return result;
 }
 
