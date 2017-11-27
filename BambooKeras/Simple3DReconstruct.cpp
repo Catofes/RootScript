@@ -235,7 +235,7 @@ void T3DConvert::raw2wave(const RawHits &input)
     center_z /= count;
     for (int i = get<0>(trigger_info); i < get<2>(trigger_info); i++) {
         auto x = int((get<2>(electron_info[i]) - center_x) / 8);
-        auto y = int((get<2>(electron_info[i]) - center_y) / 8);
+        auto y = int((get<3>(electron_info[i]) - center_y) / 8);
         auto t = int(floor((get<1>(electron_info[i]) - trigger_offset) / 0.2 + 256));
         auto z = int((t * 0.2 * drift_velocity - center_z) / 8);
         auto key = make_tuple(x, y, z);
