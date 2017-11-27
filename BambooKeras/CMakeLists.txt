@@ -21,3 +21,6 @@ target_link_libraries(DrawWave readout ReadoutWave)
 
 add_executable(3DReconstruct 3DReconstruct.cpp)
 target_link_libraries(3DReconstruct readout ReadoutWave)
+
+add_executable(Simple3DReconstruct Simple3DReconstruct.cpp)
+target_link_libraries(Simple3DReconstruct readout ReadoutWave)
