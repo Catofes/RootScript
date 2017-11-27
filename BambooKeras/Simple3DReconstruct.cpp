@@ -32,7 +32,7 @@ public:
 
     void final(int offset, int limit, int pid);
 
-    ReadoutWave raw2wave(const RawHits &input);
+    void raw2wave(const RawHits &input);
 
     void reconstruct(const ReadoutWave &input);
 
@@ -144,9 +144,7 @@ void T3DConvert::process(int i)
     input.zd = *yd;
     input.td = *td;
     input.energy = *energy;
-    auto result = raw2wave(input);
-    reconstruct(result);
-    cluster();
+    raw2wave(input);
     output_tree->Fill();
 }
 
@@ -169,7 +167,7 @@ void T3DConvert::final(int offset, int limit, int pid)
     output_file->Close();
 }
 
-ReadoutWave T3DConvert::raw2wave(const RawHits &input)
+void T3DConvert::raw2wave(const RawHits &input)
 {
     gap_count = 0;
     out_pixel_count = 0;
@@ -177,7 +175,7 @@ ReadoutWave T3DConvert::raw2wave(const RawHits &input)
     cross_cathode = false;
 
     if (input.xd.size() <= 0)
-        return ReadoutWave();
+        return;
     bool in_top = input.zd[0] > 0;
 
     vector<ElectronInfo> electron_info;
@@ -189,7 +187,7 @@ ReadoutWave T3DConvert::raw2wave(const RawHits &input)
         auto e = input.energy[i];
         if (z > 0 != in_top) {
             cross_cathode = true;
-            return ReadoutWave();
+            return;
         }
         double drift_z = z_plane - abs(z);
         if (drift_z < 0)
@@ -247,31 +245,16 @@ ReadoutWave T3DConvert::raw2wave(const RawHits &input)
             track_info[key]++;
         }
     }
-
-    for (auto &kv: track_info){
-
+    _cluster_x->clear();
+    _cluster_y->clear();
+    _cluster_z->clear();
+    _cluster_e->clear();
+    for (auto &kv: track_info) {
+        _cluster_x->push_back(get<0>(kv.first));
+        _cluster_y->push_back(get<1>(kv.first));
+        _cluster_z->push_back(get<2>(kv.first));
+        _cluster_e->push_back(kv.second * work_function);
     }
-//    ReadoutWave result;
-//    result.trigger_offset = get<1>(electron_info[get<1>(trigger_info)]);
-//    for (int i = get<0>(trigger_info); i < get<2>(trigger_info); i++) {
-//        int channel_id = get<0>(electron_info[i]);
-//        int t = int(floor((get<1>(electron_info[i]) - result.trigger_offset) / 0.2 + 256));
-//        if (result.detectors.find(channel_id) == result.detectors.end()) {
-//            Wave wave;
-//            wave.resize(512, 0);
-//            wave[t]++;
-//            result.detectors[channel_id] = wave;
-//        } else {
-//            result.detectors[channel_id][t]++;
-//        }
-//    }
-//    result.begin = get<0>(trigger_info);
-//    result.trigger = get<1>(trigger_info);
-//    result.end = get<2>(trigger_info);
-//    result.total_energy = (get<2>(trigger_info) - get<0>(trigger_info)) * work_function;
-//    trigger_Energy = result.total_energy;
-//    triggered = true;
-//    return result;
 }
 
 void T3DConvert::reconstruct(const ReadoutWave &input)
