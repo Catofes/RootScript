@@ -61,7 +61,7 @@ public:
     vector<int> *_cluster_y = new vector<int>;
     vector<int> *_cluster_z = new vector<int>;
     vector<double> *_cluster_e = new vector<double>;
-    string *_type;
+    string *_type = new string();
     double _cluster_max_energy;
     int _usage;
 
@@ -84,9 +84,9 @@ public:
     double z_plane;
     double trigger_threshold;
 
-    const double cluster_x_size = 3;
-    const double cluster_y_size = 3;
-    const double cluster_z_size = 3;
+    const double cluster_x_size = 8;
+    const double cluster_y_size = 8;
+    const double cluster_z_size = 8;
 
 };
 
