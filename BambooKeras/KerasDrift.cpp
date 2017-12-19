@@ -248,7 +248,7 @@ void Raw2Electron::process(int i)
 {
     if (i % 10 == 0)cout << i << endl;
     chain->GetEntry(i);
-    if (totalEnergy < 2400)
+    if (totalEnergy < 2300)
         return;
     RawHits input;
     input.xd = *xd;
@@ -265,7 +265,7 @@ void Raw2Electron::process(int i)
     _out_pixel_count = convert_event.out_pixel_count;
     _record_count = convert_event.record_count;
     _cross_cathode = convert_event.cross_cathode;
-    if (_trigger_Energy > 2350)
+    if (_trigger_Energy > 2300)
         _output_tree->Fill();
     //}
 }
