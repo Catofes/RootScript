@@ -28,8 +28,8 @@ public:
 private:
     const double cluster_x_size = 3;
     const double cluster_z_size = 2.99;
-    const double energy_cut_low = 2436.9;
-    const double energy_cut_high = 2478.7;
+    const double energy_cut_low = 2395;
+    const double energy_cut_high = 2521;
 
     TFile *output_file;
     TTree *output_tree;

@@ -265,7 +265,7 @@ void Raw2Electron::process(int i)
     _out_pixel_count = convert_event.out_pixel_count;
     _record_count = convert_event.record_count;
     _cross_cathode = convert_event.cross_cathode;
-    if (_trigger_Energy > 2400)
+    if (_trigger_Energy > 2350)
         _output_tree->Fill();
     //}
 }
