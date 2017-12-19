@@ -27,7 +27,7 @@ public:
 
 private:
     const double cluster_x_size = 3;
-    const double cluster_z_size = 2.99;
+    const double cluster_z_size = 3;
     const double energy_cut_low = 2395;
     const double energy_cut_high = 2521;
 
