@@ -111,7 +111,7 @@ ReconstructConvert::ReconstructConvert(const string &input_file_name, const stri
 void ReconstructConvert::process(int i)
 {
     chain->GetEntry(i);
-    if (_trigger_Energy < 2400)
+    if (_trigger_Energy < 2300)
         return;
     _xzx->clear();
     _xzz->clear();
