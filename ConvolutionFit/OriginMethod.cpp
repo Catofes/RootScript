@@ -1,21 +1,27 @@
 #include <RooRealVar.h>
+#include <TApplication.h>
 #include "OriginMethod.h"
 #include "RooAddPdf.h"
 #include "RooVoigtian.h"
 #include "RooMyPdf.h"
+#include "RooPlot.h"
 
 using namespace RooFit;
 
-int main()
+int main(int argc, char **argv)
 {
-    RooRealVar x("x", "x", 15, 10, 20);
+    TApplication *myapp = new TApplication("App", &argc, argv);
+    RooRealVar x("x", "x", 15, 0, 30);
     RooRealVar width("width", "width", 10, 8, 12);
-    RooRealVar mean("width", "width", 10, 8, 12);
-    RooRealVar sigma("width", "width", 0.5, 0.5, 0.5);
-    RooMyPdf my_pdf("my_pdf", "MyPDF", x, mean, width);
+    RooRealVar mean("mean", "mean", 10, 8, 12);
+    RooRealVar sigma("sigma", "sigma", 0.5, 0.5, 0.5);
+    RooMyPdf my_pdf_1("my_pdf_1", "MyPDF", x, mean, width, 0);
+    RooMyPdf my_pdf_2("my_pdf_2", "MyPDF", x, mean, width, 1);
     RooVoigtian voigtian_pdf("voigtian_pdf", "VoigtianPdf", x, mean, width, sigma);
     RooPlot *xfram = x.frame();
-    my_pdf.plotOn(xfram);
-    voigtian_pdf.plotOn(xfram);
-    
+    voigtian_pdf.plotOn(xfram, LineColor(1));
+    my_pdf_1.plotOn(xfram, LineColor(2));
+    my_pdf_2.plotOn(xfram, LineColor(3));
+    xfram->Draw();
+    myapp->Run();
 }

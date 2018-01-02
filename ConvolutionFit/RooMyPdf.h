@@ -20,7 +20,7 @@ public:
     {};
 
     RooMyPdf(const char *name, const char *title,
-             RooAbsReal &_x, RooAbsReal &_mean, RooAbsReal &_width);
+             RooAbsReal &_x, RooAbsReal &_mean, RooAbsReal &_width, int method = 0);
 
     RooMyPdf(const RooMyPdf &other, const char *name = 0);
 
@@ -35,6 +35,11 @@ protected:
     RooRealProxy x;
     RooRealProxy width;
     RooRealProxy mean;
+    int method;
+
+    Double_t gaus_evaluate() const;
+
+    Double_t normal_evaluate() const;
 
     Double_t evaluate() const;
 
