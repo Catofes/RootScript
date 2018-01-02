@@ -12,27 +12,41 @@
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
- 
-class RooMyPdf : public RooAbsPdf {
+
+class RooMyPdf : public RooAbsPdf
+{
 public:
-  RooMyPdf() {} ; 
-  RooMyPdf(const char *name, const char *title,
-	      RooAbsReal& _x,
-	      RooAbsReal& _alpha);
-  RooMyPdf(const RooMyPdf& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooMyPdf(*this,newname); }
-  inline virtual ~RooMyPdf() { }
+    RooMyPdf()
+    {};
+
+    RooMyPdf(const char *name, const char *title,
+             RooAbsReal &_x, RooAbsReal &_mean, RooAbsReal &_width);
+
+    RooMyPdf(const RooMyPdf &other, const char *name = 0);
+
+    virtual TObject *clone(const char *newname) const
+    { return new RooMyPdf(*this, newname); }
+
+    inline virtual ~RooMyPdf()
+    {}
 
 protected:
 
-  RooRealProxy x ;
-  RooRealProxy alpha ;
-  
-  Double_t evaluate() const ;
+    RooRealProxy x;
+    RooRealProxy width;
+    RooRealProxy mean;
+
+    Double_t evaluate() const;
 
 private:
 
-  ClassDef(RooMyPdf,1) // Your description goes here...
+    Double_t sub_evaluate(Double_t x) const;
+
+    Double_t sub_f(Double_t x) const;
+
+    Double_t sub_sigma(Double_t x) const;
+
+ClassDef(RooMyPdf, 1) // Your description goes here...
 };
- 
+
 #endif

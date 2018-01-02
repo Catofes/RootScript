@@ -1,1 +1,5 @@
-add_executable(OriginMethod OriginMethod.cpp)
+INCLUDE_DIRECTORIES(.)
+set(ROOT_DICT_INPUT_HEADERS RooMyPdf.h)
+GEN_ROOT_DICT_SOURCE(RooMyPdf.cxx)
+add_executable(OriginMethod OriginMethod.cpp RooMyPdf.cxx)
+target_link_libraries(OriginMethod RooFit RooFitCore)
