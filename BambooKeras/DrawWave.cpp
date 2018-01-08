@@ -124,9 +124,12 @@ void DrawWave::process(int i)
     output_th1f = new TH1F("wave", "", wave.size(), 0, wave.size());
     output_th1f->GetXaxis()->SetTitle("Time bins");
     output_th1f->GetXaxis()->CenterTitle();
+    output_th1f->GetXaxis()->SetTitleSize(0.05);
+    output_th1f->GetXaxis()->SetTitleOffset(0.8);
     output_th1f->GetYaxis()->SetTitle("Electron count");
-    output_th1f->GetYaxis()->SetTitleOffset(1.2);
-    output_th1f->GetXaxis()->CenterTitle();
+    output_th1f->GetYaxis()->SetTitleOffset(0.9);
+    output_th1f->GetYaxis()->CenterTitle();
+    output_th1f->GetYaxis()->SetTitleSize(0.05);
     output_th1f->SetStats(false);
 
     for (auto k = 0; k < wave.size(); k++) {

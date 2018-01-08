@@ -8,13 +8,14 @@
 
 #include <complex>
 #include <RooMath.h>
+#include <chrono>
 #include "Riostream.h"
 
 #include "RooMyPdf.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "TMath.h"
-#include "iostream"
+#include "fastgl.h"
 
 ClassImp(RooMyPdf)
 
@@ -26,6 +27,9 @@ RooMyPdf::RooMyPdf(const char *name, const char *title,
         width("width", "Breit-Wigner Width", this, _width),
         method(_method)
 {
+    string a = "time_";
+    a += string(name);
+    h = new TH1F(a.c_str(), "time", 1000, 0, 3000);
 }
 
 
@@ -36,6 +40,7 @@ RooMyPdf::RooMyPdf(const RooMyPdf &other, const char *name) :
         width("width", this, other.width),
         method(other.method)
 {
+    h = other.h;
 }
 
 
@@ -54,37 +59,36 @@ Double_t RooMyPdf::sub_sigma(Double_t t) const
 // F(t) = f(t) * \frac{1}{\sigma (t)} \exp{-\frac{(t-x)^2}{2*\sigma^2(t)}}
 Double_t RooMyPdf::sub_evaluate(Double_t t) const
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     Double_t s = (sub_sigma(t) > 0) ? sub_sigma(t) : -sub_sigma(t);
     Double_t arg = t - x;
     Double_t coef = -0.5 / (s * s);
-    return sub_f(t) * exp(coef * arg * arg) * 1 / s;
+    double_t result = sub_f(t) * exp(coef * arg * arg) * 1 / s;
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    h->Fill(std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start).count());
+
+    return result;
 }
 
 Double_t RooMyPdf::gaus_evaluate() const
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     Double_t upper = x.max();
     Double_t lower = x.min();
     Double_t result = 0;
-
-    double x0[5] = {0,
-                    sqrt(245 - 14 * sqrt(70)) / 21.,
-                    -sqrt(245 - 14 * sqrt(70)) / 21.,
-                    sqrt(245 + 14 * sqrt(70)) / 21.,
-                    -sqrt(245 + 14 * sqrt(70)) / 21.,
-    };
-
-    double a0[5] = {
-            128 / 225.,
-            (322 + 13 * sqrt(70)) / 900.,
-            (322 + 13 * sqrt(70)) / 900.,
-            (322 - 13 * sqrt(70)) / 900.,
-            (322 - 13 * sqrt(70)) / 900.,
-    };
-
-    for (int i = 0; i < 5; i++) {
-        result += a0[i] * sub_evaluate((upper - lower) / 2. * x0[i] + (upper + lower) / 2.);
+    for (int i = 0; i < 10000; i++) {
+        fastgl::QuadPair p = fastgl::GLPair(10000, i + 1);
+        result += p.weight * sub_evaluate((upper - lower) / 2. * p.x() + (upper + lower) / 2.);
     }
-    return (upper - lower) / 2. * result;
+    result = (upper - lower) / 2. * result;
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    h->Fill(std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start).count());
+
+    return result;
 }
 
 Double_t RooMyPdf::normal_evaluate() const

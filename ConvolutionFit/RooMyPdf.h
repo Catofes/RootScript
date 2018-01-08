@@ -12,6 +12,7 @@
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
+#include "TH1F.h"
 
 class RooMyPdf : public RooAbsPdf
 {
@@ -30,6 +31,7 @@ public:
     inline virtual ~RooMyPdf()
     {}
 
+    TH1F *h;
 protected:
 
     RooRealProxy x;
