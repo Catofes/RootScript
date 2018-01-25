@@ -12,12 +12,11 @@
 #include "Riostream.h"
 
 #include "RooMyPdf.h"
-#include "RooAbsReal.h"
-#include "RooAbsCategory.h"
-#include "TMath.h"
-#include "fastgl.h"
+#include "cuda_calculate.h"
 
 ClassImp(RooMyPdf)
+
+const int bins = 100000;
 
 RooMyPdf::RooMyPdf(const char *name, const char *title,
                    RooAbsReal &_x, RooAbsReal &_mean, RooAbsReal &_width, int _method) :
@@ -25,11 +24,20 @@ RooMyPdf::RooMyPdf(const char *name, const char *title,
         x("x", "x", this, _x),
         mean("mean", "mean", this, _mean),
         width("width", "Breit-Wigner Width", this, _width),
-        method(_method)
+        method(_method),
+        gaus_x(bins),
+        gaus_w(bins)
 {
     string a = "time_";
     a += string(name);
-    h = new TH1F(a.c_str(), "time", 1000, 0, 3000);
+    h = new TH1F(a.c_str(), "time", 1000, 0, 10000000);
+    if (_method == 0 || _method == 3) {
+        temp = new fastgl::QuadPair[bins];
+        for (int i = 0; i < bins; i++) {
+            temp[i] = fastgl::GLPair(bins, i + 1);
+        }
+    }
+
 }
 
 
@@ -38,14 +46,35 @@ RooMyPdf::RooMyPdf(const RooMyPdf &other, const char *name) :
         x("x", this, other.x),
         mean("mean", this, other.mean),
         width("width", this, other.width),
-        method(other.method)
+        method(other.method),
+        gaus_x(bins),
+        gaus_w(bins)
 {
+    if (other.method == 0 || other.method == 3) {
+        temp = new fastgl::QuadPair[bins];
+        for (int i = 0; i < bins; i++) {
+            temp[i] = other.temp[i];
+        }
+    }
     h = other.h;
+    for (int i = 0; i < bins; i++) {
+        gaus_x[i] = other.gaus_x[i];
+        gaus_w[i] = other.gaus_w[i];
+    }
 }
 
 
 Double_t RooMyPdf::sub_f(Double_t t) const
 {
+    Double_t upper = x.max();
+    Double_t lower = x.min();
+    if (t > upper) {
+        t = 2 * upper - t;
+    }
+    if (t < lower) {
+        t = 2 * lower - t;
+    }
+
     Double_t w = (width > 0) ? width : -width;
     Double_t arg = t - mean;
     return (1. / (arg * arg + 0.25 * w * w));
@@ -59,43 +88,57 @@ Double_t RooMyPdf::sub_sigma(Double_t t) const
 // F(t) = f(t) * \frac{1}{\sigma (t)} \exp{-\frac{(t-x)^2}{2*\sigma^2(t)}}
 Double_t RooMyPdf::sub_evaluate(Double_t t) const
 {
-    auto start = std::chrono::high_resolution_clock::now();
-
     Double_t s = (sub_sigma(t) > 0) ? sub_sigma(t) : -sub_sigma(t);
     Double_t arg = t - x;
     Double_t coef = -0.5 / (s * s);
     double_t result = sub_f(t) * exp(coef * arg * arg) * 1 / s;
-
-    auto finish = std::chrono::high_resolution_clock::now();
-    h->Fill(std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start).count());
-
     return result;
+}
+
+Double_t RooMyPdf::cuda_normal_evaluate() const
+{
+    Double_t upper = x.max() + 3 * sub_sigma(x.max());
+    Double_t lower = x.min() - 3 * sub_sigma(x.min());
+    return sub_cuda_normal_calculate(bins, lower, upper, x, mean, width, x.min(), x.max());
+}
+
+void RooMyPdf::cuda_gaus_prepare()
+{
+    Double_t upper = x.max() + 3 * sub_sigma(x.max());
+    Double_t lower = x.min() - 3 * sub_sigma(x.min());
+    for (int i = 0; i < bins; i++) {
+        auto p = temp[i];
+        gaus_x[i] = (upper - lower) / 2. * p.x() + (upper + lower) / 2.;
+        gaus_w[i] = p.weight * (upper - lower) / 2.;
+    }
+    sub_cuda_gaus_prepare(gaus_x, gaus_w, bins);
+}
+
+Double_t RooMyPdf::cuda_gaus_evaluate() const
+{
+    Double_t upper = x.max() + 3 * sub_sigma(x.max());
+    Double_t lower = x.min() - 3 * sub_sigma(x.min());
+    return sub_cuda_gaus_calculate(bins, lower, upper, x, mean, width, x.min(), x.max());
 }
 
 Double_t RooMyPdf::gaus_evaluate() const
 {
-    auto start = std::chrono::high_resolution_clock::now();
-
-    Double_t upper = x.max();
-    Double_t lower = x.min();
+    Double_t upper = x.max() + 3 * sub_sigma(x.max());
+    Double_t lower = x.min() - 3 * sub_sigma(x.min());
     Double_t result = 0;
-    for (int i = 0; i < 10000; i++) {
-        fastgl::QuadPair p = fastgl::GLPair(10000, i + 1);
+    for (int i = 0; i < bins; i++) {
+        auto p = temp[i];
         result += p.weight * sub_evaluate((upper - lower) / 2. * p.x() + (upper + lower) / 2.);
     }
     result = (upper - lower) / 2. * result;
-
-    auto finish = std::chrono::high_resolution_clock::now();
-    h->Fill(std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start).count());
-
     return result;
 }
 
 Double_t RooMyPdf::normal_evaluate() const
 {
-    int cut = 10000;
-    double upper = x.max();
-    double lower = x.min();
+    int cut = bins;
+    Double_t upper = x.max() + 3 * sub_sigma(x.max());
+    Double_t lower = x.min() - 3 * sub_sigma(x.min());
     double step = (upper - lower) / cut;
     double result = 0;
     for (int i = 0; i < cut; i++) {
@@ -107,11 +150,24 @@ Double_t RooMyPdf::normal_evaluate() const
 
 Double_t RooMyPdf::evaluate() const
 {
+    auto start = std::chrono::high_resolution_clock::now();
+    Double_t result = 0;
     switch (method) {
         case 0:
-            return gaus_evaluate();
+            result = gaus_evaluate();
+            break;
         case 1:
-            return normal_evaluate();
+            result = normal_evaluate();
+            break;
+        case 2:
+            result = cuda_normal_evaluate();
+            break;
+        case 3:
+            result = cuda_gaus_evaluate();
+            break;
     }
+    auto finish = std::chrono::high_resolution_clock::now();
+    h->Fill(std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start).count());
+    return result;
 }
 

@@ -13,6 +13,8 @@
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "TH1F.h"
+#include "fastgl.h"
+#include <vector>
 
 class RooMyPdf : public RooAbsPdf
 {
@@ -29,7 +31,13 @@ public:
     { return new RooMyPdf(*this, newname); }
 
     inline virtual ~RooMyPdf()
-    {}
+    {
+        if (temp != nullptr) {
+            delete temp;
+        }
+    }
+
+    void cuda_gaus_prepare();
 
     TH1F *h;
 protected:
@@ -39,9 +47,17 @@ protected:
     RooRealProxy mean;
     int method;
 
+    fastgl::QuadPair *temp = nullptr;
+    std::vector<double> gaus_x;
+    std::vector<double> gaus_w;
+
     Double_t gaus_evaluate() const;
 
     Double_t normal_evaluate() const;
+
+    Double_t cuda_normal_evaluate() const;
+
+    Double_t cuda_gaus_evaluate() const;
 
     Double_t evaluate() const;
 
