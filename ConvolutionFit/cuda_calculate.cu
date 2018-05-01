@@ -11,7 +11,7 @@
 #include <chrono>
 #include <cuda.h>
 
-#define GPUDEBUG
+//#define GPUDEBUG
 
 struct sub_f
 {
@@ -74,6 +74,7 @@ thrust::device_vector<double> *d_t = nullptr;
 thrust::device_vector<double> *d_sigma = nullptr;
 thrust::device_vector<double> *d_x = nullptr;
 thrust::device_vector<double> *d_w = nullptr;
+//std::vector<double> *h_result = nullptr;
 
 double sub_cuda_normal_calculate(int bins, double min, double max, double x, double mean, double width, double f_min,
                                  double f_max)
@@ -88,6 +89,9 @@ double sub_cuda_normal_calculate(int bins, double min, double max, double x, dou
     if (d_sigma == nullptr) {
         d_sigma = new thrust::device_vector<double>(bins);
     }
+//    if (h_result == nullptr) {
+//        h_result = new std::vector<double>(bins);
+//    }
 #ifdef GPUDEBUG
     start = std::chrono::high_resolution_clock::now();
 #endif
@@ -139,6 +143,25 @@ double sub_cuda_normal_calculate(int bins, double min, double max, double x, dou
     std::cout << "s6: " << std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start).count() << std::endl;
     start = std::chrono::high_resolution_clock::now();
 #endif
+//
+//    thrust::copy((*d_t).begin(), (*d_t).end(), (*h_result).begin());
+//
+//#ifdef GPUDEBUG
+//    finish = std::chrono::high_resolution_clock::now();
+//    std::cout << "s7: " << std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start).count() << std::endl;
+//    start = std::chrono::high_resolution_clock::now();
+//#endif
+//
+//    double r;
+//    for (int i = 0; i < bins; i++) {
+//        r += (*h_result)[i];
+//    }
+//
+//#ifdef GPUDEBUG
+//    finish = std::chrono::high_resolution_clock::now();
+//    std::cout << "s8: " << std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start).count() << std::endl;
+//    start = std::chrono::high_resolution_clock::now();
+//#endif
 
     return result;
 }
@@ -222,5 +245,6 @@ double sub_cuda_gaus_calculate(int bins, double min, double max, double x, doubl
     std::cout << "s6: " << std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start).count() << std::endl;
     start = std::chrono::high_resolution_clock::now();
 #endif
+
     return result;
 }

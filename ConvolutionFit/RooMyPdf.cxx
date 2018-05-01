@@ -37,7 +37,6 @@ RooMyPdf::RooMyPdf(const char *name, const char *title,
             temp[i] = fastgl::GLPair(bins, i + 1);
         }
     }
-
 }
 
 

@@ -29,10 +29,10 @@ int main(int argc, char **argv)
     RooVoigtian voigtian_pdf("voigtian_pdf", "VoigtianPdf", x, mean, width, sigma);
     RooPlot *xfram = x.frame();
     voigtian_pdf.plotOn(xfram, LineColor(1));
-//    my_pdf_1.plotOn(xfram, LineColor(2));
+    my_pdf_1.plotOn(xfram, LineColor(2));
     my_pdf_2.plotOn(xfram, LineColor(3));
     my_pdf_3.plotOn(xfram, LineColor(4));
-//    my_pdf_4.plotOn(xfram, LineColor(5));
+    my_pdf_4.plotOn(xfram, LineColor(5));
 //    auto h_voigtian_pdf = voigtian_pdf.createHistogram("x", 1000000);
 //    auto h_my_pdf_1 = my_pdf_1.createHistogram("x", 100000);
 //    auto h_my_pdf_2 = my_pdf_2.createHistogram("x", 100000);
@@ -50,29 +50,29 @@ int main(int argc, char **argv)
 
     xfram->Draw();
 
-//    TCanvas *c2 = new TCanvas("gaus_evaluate", "gaus_evaluate");
-//    c2->cd();
-//    my_pdf_1.h->Draw();
-//    c2->SetLogy(true);
-//    c2->Update();
-//
-//    TCanvas *c3 = new TCanvas("normal_evaluate", "normal_evaluate");
-//    c3->cd();
-//    my_pdf_2.h->Draw();
-//    c3->SetLogy(true);
-//    c3->Update();
-//
-//    TCanvas *c4 = new TCanvas("cuda_normal_evaluate", "cuda_normal_evaluate");
-//    c4->cd();
-//    my_pdf_3.h->Draw();
-//    c4->SetLogy(true);
-//    c4->Update();
-//
-//    TCanvas *c5 = new TCanvas("cuda_gaus_evaluate", "cuda_gaus_evaluate");
-//    c5->cd();
-//    my_pdf_4.h->Draw();
-//    c5->SetLogy(true);
-//    c5->Update();
+    TCanvas *c2 = new TCanvas("gaus_evaluate", "gaus_evaluate");
+    c2->cd();
+    my_pdf_1.h->Draw();
+    c2->SetLogy(true);
+    c2->Update();
+
+    TCanvas *c3 = new TCanvas("normal_evaluate", "normal_evaluate");
+    c3->cd();
+    my_pdf_2.h->Draw();
+    c3->SetLogy(true);
+    c3->Update();
+
+    TCanvas *c4 = new TCanvas("cuda_normal_evaluate", "cuda_normal_evaluate");
+    c4->cd();
+    my_pdf_3.h->Draw();
+    c4->SetLogy(true);
+    c4->Update();
+
+    TCanvas *c5 = new TCanvas("cuda_gaus_evaluate", "cuda_gaus_evaluate");
+    c5->cd();
+    my_pdf_4.h->Draw();
+    c5->SetLogy(true);
+    c5->Update();
 
     myapp->Run();
 }
