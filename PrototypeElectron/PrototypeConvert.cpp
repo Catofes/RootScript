@@ -166,8 +166,8 @@ void PrototypeConvert::get_electron_info()
         return;
     for (auto i = 0; i < (*xd).size(); i++) {
         auto x = (*xd)[i];
-        auto y = (*zd)[i];
-        auto z = (*yd)[i];
+        auto y = (*yd)[i];
+        auto z = (*zd)[i];
         auto t = (*td)[i];
         auto e = (*energy)[i];
         double drift_z = _z_plane - z;

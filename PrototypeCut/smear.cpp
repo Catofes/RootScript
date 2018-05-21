@@ -46,8 +46,8 @@ double SmearTotalEnergy::energy_in_readout()
     double total_energy = 0;
     for (int i = 0; i < xd->size(); i++) {
         double x = (*xd)[i];
-        double y = (*zd)[i];
-        double z = (*yd)[i];
+        double y = (*yd)[i];
+        double z = (*zd)[i];
         double e = (*energy)[i];
         if (-100 < x && x < 100 && -100 < y && y < 100)
             total_energy += e;
