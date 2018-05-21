@@ -197,7 +197,7 @@ void PrototypeConvert::get_electron_info()
 bool PrototypeConvert::out_of_border(double x, double y)
 {
     for (auto &u:_micromegas_info)
-        if ((abs(x - get<0>(u)) < _micromegas_size) && (abs(y - get<1>(u)) < _micromegas_size))
+        if ((abs(x - get<0>(u)) < _micromegas_size/2.) && (abs(y - get<1>(u)) < _micromegas_size/2.))
             return false;
     return true;
 }
